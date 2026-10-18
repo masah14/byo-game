@@ -202,7 +202,7 @@ svg.led .led-on{filter:drop-shadow(0 0 1.6px rgba(70,255,126,.85))}
 .rs-card{background:var(--soft);border-radius:16px;padding:14px 14px 12px}
 .rs-rate .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .badge{display:inline-block;border-radius:20px;padding:2px 12px;font-size:12px;font-weight:700;letter-spacing:.08em}
-.badge.easy{background:#dcfce7;color:#166534}.badge.normal{background:#fef3c7;color:#92400e}.badge.hard{background:#fee2e2;color:#991b1b}
+.badge.easy,.badge.s1{background:#dcfce7;color:#166534}.badge.s2{background:#ecfccb;color:#3f6212}.badge.normal,.badge.s3{background:#fef3c7;color:#92400e}.badge.s4{background:#ffedd5;color:#9a3412}.badge.hard,.badge.s5{background:#fee2e2;color:#991b1b}
 .rs-rate .row{display:flex;align-items:baseline;justify-content:center;gap:14px}
 .rs-rate .row b{font-family:var(--serif);font-size:30px;font-variant-numeric:tabular-nums}
 .rs-rate .delta{font-family:var(--serif);font-size:28px;font-weight:700}
@@ -500,14 +500,19 @@ const MODES = [
   { key: 'normal', name: 'ふつう', lo: 3, hi: 10 },
   { key: 'hard', name: 'むずかしい', lo: 5, hi: 20 },
 ];
-const MODE = Object.fromEntries(MODES.map(m => [m.key, m]));
+// ランクマッチの難易度（★）：お題の秒数で決まる。5秒以内＝★1、10秒以内＝★2、…25秒以内＝★5（★が多いほど、レートの動く幅が大きい）
+const STARS = [
+  { key: 's1', star: 1, lo: 2, hi: 5 }, { key: 's2', star: 2, lo: 5.1, hi: 10 }, { key: 's3', star: 3, lo: 10.1, hi: 15 },
+  { key: 's4', star: 4, lo: 15.1, hi: 20 }, { key: 's5', star: 5, lo: 20.1, hi: 25 },
+].map(m => ({ ...m, name: '★'.repeat(m.star) + '☆'.repeat(5 - m.star) }));
+const MODE = Object.fromEntries([...MODES, ...STARS].map(m => [m.key, m]));
 if (!MODE[S.mode]) S.mode = 'normal';
 const MAX_CS = 3000;    // 1回の計測は、30秒まで（超えたら、自動でストップ）。短い計測は、いくらでもOK（0.01秒が下限）
 const MAX_TURNS = 60;   // 番の数の上限。人の反応で、1回ごとに、必ずコンマ数秒は進むので、ふつうは当たらない安全装置（ルールの長さの都合でもある）。60番が終わっても決着がつかなければ、引き分け
 const IDLE_MS = 62000;  // 相手の番で、60秒なにも起きなかったら、不戦勝（サーバーのルールは60秒。時計のずれを見て、2秒の余裕）
 const OFF_MS = 20000;   // 相手の通信が切れて、20秒たったら、不戦勝
 const CPU_NAMES = ['タイマーくん', 'ストップ師匠', 'ぴったりさん', 'せっかちケン', 'のんびりハナ'];
-const randTarget = mode => randInt(MODE[mode].lo * 10, MODE[mode].hi * 10) * 10;   // 1/100秒の整数（0.1秒きざみ：430＝4.3秒）
+const randTarget = mode => randInt(Math.round(MODE[mode].lo * 10), Math.round(MODE[mode].hi * 10)) * 10;   // 1/100秒の整数（0.1秒きざみ：430＝4.3秒）
 const fmtT = cs => (cs / 100).toFixed(1);   // お題の秒数の表示：「4.3」
 
 /* ---------- 広告 ----------
@@ -1098,7 +1103,7 @@ function startCpu() {
      matches/対戦ID/t/番号             … { u, s(スタート), e(ストップ), d(長さ), c(超えた) }
      matches/対戦ID/leave|forfeit/ユーザーID … 退室／不戦敗の印
      matches/対戦ID/res                … ランクマッチの結果 { w(勝者／'draw'), c?, ts }。ルールが、記録から検算する
-   ランクマッチ：難易度（かんたん／ふつう／むずかしい）と先行・後攻は、対戦IDから決まる。難易度ごとに、レートの動く幅が違う。 */
+   ランクマッチ：難易度（★1〜★5。お題の秒数で決まる）と先行・後攻は、対戦IDから決まる。★ごとに、レートの動く幅が違う。 */
 const RMFB = { ver: '10.14.1', cfg: { apiKey: 'AIzaSyAufwz6FA0oyLhlmjvmhR91hhjnFzA9mSU', authDomain: 'byo-sakamoto-games.firebaseapp.com', databaseURL: 'https://byo-sakamoto-games-default-rtdb.asia-southeast1.firebasedatabase.app', projectId: 'byo-sakamoto-games', appId: '1:976167630634:web:efd31e0ee74d0e1e56d053' } };   // Firebase のウェブアプリの設定値（公開されても問題のない値。守っているのは、データベースのルール）
 const fbOk = () => !!(RMFB.cfg.apiKey && RMFB.cfg.databaseURL);
 const FB = { ready: null, m: null, db: null, auth: null, uid: null, offset: 0 };
@@ -1178,13 +1183,13 @@ function cancelWait() {
 }
 
 /* ---------- ランクマッチ（レート戦） ---------- */
-const FILL_K = 24, FILL_CAP = 4000;   // 通信を使わない対戦で、1回に動かせる幅の上限（ルールと同じ値）。FILL_CAP は、レートの最大値と同じ（実質、上限なし）
+const FILL_K = 48, FILL_CAP = 4000;   // 通信を使わない対戦で、1回に動かせる幅の上限（ルールと同じ値）。FILL_CAP は、レートの最大値と同じ（実質、上限なし）
 const RANK_SINCE = 1792340667154;   // この時刻より前に、最後に遊んだ記録（試験で作ったもの）は、ランキングに出さない
-const RATE_K = { easy: 16, normal: 24, hard: 32 };   // 難易度ごとの、レートの動く幅の上限（ルールと同じ値）
+const RATE_K = { easy: 16, normal: 24, hard: 32, s1: 16, s2: 24, s3: 32, s4: 40, s5: 48 };   // 難易度ごとの、レートの動く幅の上限（ルールと同じ値）
 // 難易度と先行・後攻は、対戦IDから決まる（ルールが検算する。作る側が、有利な組み合わせを選べない）
 function rankedParams() {
   const mid = randHex(16), last = parseInt(mid[15], 16), sl = parseInt(mid[14], 16);
-  return { mid, mode: last <= 5 ? 'easy' : (last <= 10 ? 'normal' : 'hard'), fa: sl % 2 === 0 };
+  return { mid, mode: last <= 2 ? 's1' : (last <= 5 ? 's2' : (last <= 8 ? 's3' : (last <= 11 ? 's4' : 's5'))), fa: sl % 2 === 0 };
 }
 // レートの動き：イロレーティング。勝ちなら必ず+1以上、負けなら必ず-1以下（上限は、難易度の K）。引き分けは、変動なし
 function eloDelta(me, opp, res, mode) {
@@ -1232,7 +1237,7 @@ async function settleLeftover(p) {
     const t = m.t || {}, arr = Array.isArray(t) ? t : Object.keys(t).sort((x, y) => x - y).map(k => t[k]);
     const recs = arr.map(r => r ? { p: uids.indexOf(r.u), s: r.s ? 1 : 0, d: r.d == null ? null : +r.d, c: r.c ? 1 : 0 } : null);
     const gone = Object.assign({}, m.leave || {}, m.forfeit || {}), gi = uids.findIndex(u => gone[u]);
-    let over = judge(recs, meta.fa ? 0 : 1, clamp(Math.round(+meta.target || 500), 100, 2000), gi >= 0 ? gi : null, 'leave').over;
+    let over = judge(recs, meta.fa ? 0 : 1, clamp(Math.round(+meta.target || 500), 100, 2500), gi >= 0 ? gi : null, 'leave').over;
     if (!over) {
       if (!(m.p && m.p[uids[opp]])) { await clearInMatch(); return null; }   // 相手が来なかった：数えずに閉じる
       await dbSet(`matches/${mid}/leave/${FB.uid}`, TSV()).catch(() => {});   // 途中で閉じた対戦：自分が抜けたことにして、負け
@@ -1418,7 +1423,7 @@ function onlineData(v) {
     const rated = meta.rated === true;
     beginMatch({
       kind: N.how === 'room' ? 'room' : (rated ? 'ranked' : 'online'), rated, oppRating: rated ? (+v.p[uids[1 - me]].rating || 1000) : 0,
-      mode: MODE[meta.mode] ? meta.mode : 'normal', targetCs: clamp(Math.round(+meta.target || 500), 100, 2000),
+      mode: MODE[meta.mode] ? meta.mode : 'normal', targetCs: clamp(Math.round(+meta.target || 500), 100, 2500),
       names: [cleanName(String(v.p[meta.a].name || '').slice(0, 10) || 'ゲスト'), cleanName(String(v.p[meta.b].name || '').slice(0, 10) || 'ゲスト')],
       uids, me, first: meta.fa ? 0 : 1,
     });
