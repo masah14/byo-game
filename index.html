@@ -1325,7 +1325,7 @@ function renderRanking(list, myId, myRate) {
     : '';
   $('#rk-list').innerHTML = ready
     ? top.map((x, i) => `<li class="${x.id === myId ? 'me' : ''}"><span class="n">${i + 1}</span><span class="nm">${esc(x.name)}</span><span class="rt">${x.rating}</span></li>`).join('')
-    : '<li class="rk-empty">準備中です。<br>参加者が' + RANK_MIN + '人になったら、公開します。</li>';
+    : '<li class="rk-empty">準備中です。<br>公開まで、しばらくお待ちください。</li>';
 }
 async function openRanking() {
   if (needFb()) return;
