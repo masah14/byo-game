@@ -38,7 +38,7 @@ body{touch-action:manipulation;-webkit-user-select:none;user-select:none;font-si
 button,input{font:inherit;color:inherit}
 [hidden]{display:none!important}
 #app{max-width:480px;margin:0 auto;height:100vh;height:100dvh;position:relative;overflow:hidden;background:var(--bg)}
-.screen{position:absolute;inset:0;padding:max(18px,env(safe-area-inset-top)) 20px max(18px,env(safe-area-inset-bottom));display:none;flex-direction:column;gap:14px;overflow-y:auto;overflow-x:hidden;overscroll-behavior-x:none;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.screen{overflow-anchor:none;position:absolute;inset:0;padding:max(18px,env(safe-area-inset-top)) 20px max(18px,env(safe-area-inset-bottom));display:none;flex-direction:column;gap:14px;overflow-y:auto;overflow-x:hidden;overscroll-behavior-x:none;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .screen.on{display:flex}
 
 /* ボタン */
@@ -580,6 +580,9 @@ function show(id) {
   current = id;
   if (id !== 's-result') $('#win-fx').hidden = true;
   $$('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+  // 画面が変わったら、いつも、いちばん上から（前の画面の、スクロールの位置を、引きつがない）
+  const sc = document.getElementById(id); if (sc) { sc.scrollTop = 0; requestAnimationFrame(() => { sc.scrollTop = 0; }); setTimeout(() => { if (current === id) sc.scrollTop = 0; }, 120); }
+  try { window.scrollTo(0, 0); } catch (e) {}
   wake(id === 's-game');
   if (id === 's-menu') updateMenu();
   if (id === 's-room') $('#rm-mode').textContent = '「' + MODE[S.mode].name + '」（お題は' + MODE[S.mode].lo + '〜' + MODE[S.mode].hi + '秒）で遊びます。モードは、メニューで変えられます。';
