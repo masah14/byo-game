@@ -8,22 +8,22 @@
 <meta name="description" content="お題の秒数を超えたと思ったら「超えた」ボタン。スタートとストップを交互に押して、合計の時間を感覚で読み合う、2人対戦のゲームです。友達とも、オンラインで遊べます。">
 <link rel="canonical" href="https://byo.sakamoto-games.com/">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://byo.sakamoto-games.com/?v=2">
-<meta property="og:site_name" content="ボタンで秒数ゲーム">
+<meta property="og:url" content="https://byo.sakamoto-games.com/?v=3">
+<meta property="og:site_name" content="体内時計バトル">
 <meta property="og:locale" content="ja_JP">
-<meta property="og:title" content="ボタンで秒数ゲーム｜お題の秒数、もう超えた？">
+<meta property="og:title" content="体内時計バトル｜お題の秒数、もう超えた？">
 <meta property="og:description" content="スタートとストップを交互に押して、合計の時間を感覚で読み合う。超えたと思ったら「超えた」ボタン。当たれば勝ち、はずれれば負け。">
-<meta property="og:image" content="https://byo.sakamoto-games.com/og.png?v=2">
+<meta property="og:image" content="https://byo.sakamoto-games.com/og.png?v=3">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="ボタンで秒数ゲーム：お題の秒数を超えたと思ったら、超えたボタンを押す2人対戦ゲーム">
+<meta property="og:image:alt" content="体内時計バトル：お題の秒数を超えたと思ったら、超えたボタンを押す2人対戦ゲーム">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://byo.sakamoto-games.com/og.png?v=2">
+<meta name="twitter:image" content="https://byo.sakamoto-games.com/og.png?v=3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.webmanifest">
-<title>ボタンで秒数ゲーム｜超えたと思ったら勝負</title>
+<title>体内時計バトル｜超えたと思ったら勝負</title>
 <style>
 :root{
   --bg:#ffffff; --soft:#f3f4f6; --soft2:#e5e7eb; --ink:#111827; --dim:#6b7280; --line:#d1d5db;
@@ -162,6 +162,13 @@ svg.led .led-on{filter:drop-shadow(0 0 1.6px rgba(70,255,126,.85))}
 @keyframes coin-r{from{transform:rotateX(0)}to{transform:rotateX(var(--spin))}}
 @keyframes coin-y{0%{transform:translateY(0);animation-timing-function:cubic-bezier(.2,.75,.35,1)}46%{transform:translateY(-128px);animation-timing-function:cubic-bezier(.65,0,.85,.45)}100%{transform:translateY(0)}}
 @keyframes coin-s{0%{transform:scale(1);opacity:1;animation-timing-function:cubic-bezier(.2,.75,.35,1)}46%{transform:scale(.55);opacity:.45;animation-timing-function:cubic-bezier(.65,0,.85,.45)}100%{transform:scale(1);opacity:1}}
+/* 「バトル開始！」：コイントスのあと、1秒ほど。役割（先行・後攻）を、もう一度、はっきり見せてから、はじめる */
+.g-go h3{font-size:52px;letter-spacing:.1em;animation:go-in .35s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes go-in{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+.go-role{margin-top:8px;border-radius:16px;padding:12px 26px;font-weight:700;font-size:22px;line-height:1.6;text-align:center}
+.go-role small{display:block;font-weight:400;font-size:14px}
+.go-role.me{background:#dcfce7;color:#0f7a38;border:2px solid #16a34a}.go-role.me small{color:#166534}
+.go-role.op{background:var(--soft);color:var(--ink);border:2px solid var(--soft2)}.go-role.op small{color:var(--dim)}
 .gi-reveal{display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0;animation:gi-in .35s ease-out 1.5s forwards}
 @keyframes gi-in{to{opacity:1}}
 .g-intro h3{margin:0;font-family:var(--serif);font-size:34px;letter-spacing:.08em}
@@ -255,7 +262,7 @@ svg.led .led-on{filter:drop-shadow(0 0 1.6px rgba(70,255,126,.85))}
   <section id="s-menu" class="screen on">
     <div class="hero">
       <div class="hero-watch" id="hero-watch"></div>
-      <h1 class="hero-title">ボタンで<br>秒数ゲーム</h1>
+      <h1 class="hero-title">体内時計<br>バトル</h1>
       <p class="hero-sub">お題の秒数、もう超えた？</p>
     </div>
     <label class="field"><span>名前</span><input id="in-name" maxlength="10" autocomplete="off" placeholder="名前"></label>
@@ -336,6 +343,10 @@ svg.led .led-on{filter:drop-shadow(0 0 1.6px rgba(70,255,126,.85))}
     <div class="g-ctl">
       <button id="b-main" type="button">スタート</button>
       <button class="btn call" id="b-call" type="button">超えた！</button>
+    </div>
+    <div class="g-intro g-go" id="g-go" hidden>
+      <h3>バトル開始！</h3>
+      <div class="go-role" id="go-role"></div>
     </div>
     <div class="g-intro" id="g-intro" hidden>
       <div id="gi-coin"></div>
@@ -433,7 +444,7 @@ const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch
 
 /* ---------- 共有するURL ---------- */
 // 共有画像（og.png）を変えたら、この数字を上げる。LINE や X は、URLごとに、プレビューの画像を覚えている
-const SHARE_VER = 2;
+const SHARE_VER = 3;
 const SHARE_URL = () => location.origin + location.pathname + '?v=' + SHARE_VER;
 
 /* ---------- アクセス解析（Google アナリティクス） ---------- */
@@ -549,6 +560,7 @@ const sfx = (() => {
     call() { tone(300, 0, .18, 'sawtooth', .05); tone(450, .12, .24, 'sawtooth', .05); },
     win() { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * .11, .22, 'triangle', .09)); },
     lose() { tone(330, 0, .25, 'sawtooth', .05); tone(247, .2, .4, 'sawtooth', .05); },
+    go() { tone(523, 0, .12, 'triangle', .1); tone(784, .1, .14, 'triangle', .1); tone(1047, .2, .3, 'triangle', .1); },
     coin() { [.1, .22, .36, .52, .7, .92, 1.16].forEach((t, i) => tone(2300 + (i % 2) * 380, t, .05, 'sine', .035)); tone(2093, 1.4, .5, 'sine', .08); tone(3136, 1.42, .4, 'sine', .05); },
   };
 })();
@@ -744,8 +756,8 @@ function renderGame() {
   else if (M.live) {
     if (M.run && M.run.p === M.me) { cls = 'mine-run'; main = '計測中'; sub = '「ストップ」を押そう'; }
     else if (M.run) { cls = 'opp-run'; main = '相手が計測中'; sub = '頭の中で数えよう'; }
-    else if (own) { cls = 'mine'; main = 'あなたの番'; sub = '「スタート」か「超えた」'; }
-    else { cls = 'opp'; main = M.oppOffAt ? '相手の通信が切れています' : '相手の番'; }
+    else if (own) { cls = 'mine'; const f0 = M.turns.length === 0; main = f0 ? 'あなたの先行です' : 'あなたの番'; sub = f0 ? '下の「スタート」を押そう' : '「スタート」か「超えた」'; }
+    else { cls = 'opp'; const f0 = M.turns.length === 0 && !M.oppOffAt; main = M.oppOffAt ? '相手の通信が切れています' : (f0 ? '相手の先行です' : '相手の番'); sub = f0 ? '相手のスタートを待とう' : ''; }
   }
   const g = $('#g-state'); g.className = 'g-state ' + cls; g.innerHTML = `<b>${main}</b>${sub ? `<span>${sub}</span>` : ''}`;
   // ボタン
@@ -771,10 +783,17 @@ function beginMatch(cfg) {
   $('#gi-h').textContent = first ? 'あなたは 先行' : 'あなたは 後攻';
   $('#gi-p').textContent = first ? '最初の番は、あなたです' : '相手が先に始めます';
   $('#gi-t').textContent = (M.kind === 'ranked' ? 'ランクマッチ・難易度：' + MODE[M.mode].name + '\n' : '') + 'お題は ' + fmtT(M.targetCs) + ' 秒';
-  $('#g-intro').hidden = false;
+  $('#g-go').hidden = true; $('#g-intro').hidden = false;
   M.timers.intro = setTimeout(() => {
-    $('#g-intro').hidden = true; M.live = true; M.liveAt = performance.now(); M.lastEvt = Date.now();
-    renderGame(); botStep(); onlineReplay();
+    // 「バトル開始！」：役割を、もう一度、はっきり見せてから、はじめる
+    $('#g-intro').hidden = true;
+    $('#go-role').className = 'go-role ' + (first ? 'me' : 'op');
+    $('#go-role').innerHTML = first ? 'あなたが先行<small>最初の「スタート」は、あなたから</small>' : '相手が先行<small>相手のスタートを待とう</small>';
+    $('#g-go').hidden = false; sfx.go(); vib([30, 40, 60]);
+    M.timers.go = setTimeout(() => {
+      $('#g-go').hidden = true; M.live = true; M.liveAt = performance.now(); M.lastEvt = Date.now();
+      renderGame(); botStep(); onlineReplay();
+    }, 1100);
   }, 3500);
   if (!isLocal()) M.timers.tick = setInterval(onlineTick, 1000);
 }
@@ -791,7 +810,7 @@ function finishMatch() {
   renderGame();
   if (o.kind === 'call') sfx.call();
   // 通信の後片付け：最後の書き込み（「超えた」など）が相手に届くまで、最大8秒は、切らない
-  if (isLocal()) netClose();
+  if (isLocal()) { if (M.kind === 'ranked') bg(fillRate(o, M.mode, M.me)); netClose(); }
   else {
     // ランクマッチ：結果を書いて、レートを精算する（終わるまで、通信は、切らない）
     if (M.kind === 'ranked') { N.lastWrite = rankedFinish(N.mid, o, M.uids.slice(), M.mode, M.oppRating); M.ratePromise = N.lastWrite; }
@@ -871,6 +890,9 @@ async function quitMatch() {
       let w = null; try { w = ((await dbGet(`matches/${mid}/res`)) || {}).w || null; } catch (e) {}
       if (w) { const r = await settleRated(mid, w, mode, oppR); if (r) toast('レート ' + r.old + ' → ' + r.rating + '（' + (r.delta > 0 ? '+' : r.delta < 0 ? '−' : '±') + Math.abs(r.delta) + '）'); }
     })());
+  } else if (M.kind === 'ranked' && M.local) {   // 序盤の人の対戦をやめると、負け
+    M.finished = true;
+    bg(fillRate({ kind: 'leave', winner: 1 - M.me }, M.mode, M.me).then(r => { if (r) toast('レート ' + r.old + ' → ' + r.rating + '（' + (r.delta > 0 ? '+' : r.delta < 0 ? '−' : '±') + Math.abs(r.delta) + '）'); }));
   } else if (!isLocal()) { M.finished = true; S.rec.online[1]++; save(); act.leave(); }   // 先に finished にして、通信の返事で、二重に数えないようにする
   backToMenu();
 }
@@ -972,6 +994,27 @@ function pickMatchWait() {
   const r = Math.random();
   return r < 0.28 ? 2500 + Math.random() * 2500 : (r < 0.75 ? 5500 + Math.random() * 6500 : 12500 + Math.random() * 11500);
 }
+// 序盤の人（レート FILL_CAP 未満）の、通信を使わない対戦の結果で、レートを動かす。ルールが、幅（FILL_K）と間隔と範囲を見張る
+async function fillRate(o, mode, me) {
+  let r = null;
+  try {
+    await connect();
+    const path = 'ratings/' + FB.uid, p = await dbGet(path);
+    const res = o.kind === 'draw' ? 'draw' : (o.winner === me ? 'win' : 'loss');
+    if (p && !p.inMatch && p.rating < FILL_CAP && res !== 'draw') {
+      const vopp = clamp(p.rating + randInt(-70, 70), 100, 4000);   // 相手の強さは、自分と同じくらいとして計算する
+      let d = eloDelta(p.rating, vopp, res, mode);
+      d = res === 'win' ? Math.min(d, FILL_K) : Math.max(d, -FILL_K);
+      const nr = clamp(p.rating + d, 100, 4000), upd = { rating: nr, games: p.games + 1, ts: TSV() };
+      if (res === 'win') upd.wins = p.wins + 1; else upd.losses = p.losses + 1;
+      await dbUpdate(path, upd);
+      S.rate = { rating: nr, games: upd.games, wins: upd.wins != null ? upd.wins : p.wins, losses: upd.losses != null ? upd.losses : p.losses, draws: p.draws || 0 }; save();
+      r = { res, old: p.rating, rating: nr, delta: nr - p.rating, mode };
+    }
+  } catch (e) { r = null; }
+  if (M.on && M.kind === 'ranked' && M.local && !M.rateDone) { M.rateResult = r; M.rateDone = true; renderRate(); }
+  return r;
+}
 async function startFillMatch() {
   if (N.phase !== 'search') return;
   N.phase = 'fill';
@@ -982,7 +1025,7 @@ async function startFillMatch() {
   netClose();
   act = actCpu;
   const { mode, fa } = rankedParams();
-  beginMatch({ kind: 'ranked', local: true, hp: humanProfile(), mode, targetCs: randTarget(mode), names: [safeName(), guestName()], uids: [FB.uid, null], me: 0, first: fa ? 0 : 1, oppRating: 0, rateResult: null, rateDone: true });
+  beginMatch({ kind: 'ranked', local: true, hp: humanProfile(), mode, targetCs: randTarget(mode), names: [safeName(), guestName()], uids: [FB.uid, null], me: 0, first: fa ? 0 : 1, oppRating: 0, rateResult: null, rateDone: false });
 }
 
 function startCpu() {
@@ -1084,6 +1127,7 @@ function cancelWait() {
 }
 
 /* ---------- ランクマッチ（レート戦） ---------- */
+const FILL_K = 24, FILL_CAP = 1200;   // 序盤の人（レート FILL_CAP 未満）が、通信を使わない対戦で、1回に動かせる幅の上限（ルールと同じ値）
 const RATE_K = { easy: 16, normal: 24, hard: 32 };   // 難易度ごとの、レートの動く幅の上限（ルールと同じ値）
 // 難易度と先行・後攻は、対戦IDから決まる（ルールが検算する。作る側が、有利な組み合わせを選べない）
 function rankedParams() {
@@ -1171,8 +1215,9 @@ async function findRanked() {
 function searchTick() {
   if (N.phase !== 'search') return;
   const s = Math.floor((Date.now() - N.t0) / 1000);
-  waitUI('対戦相手を探しています', `ランクマッチで探しています… ${s}秒`);
-  if (Date.now() - N.t0 >= N.fillAt) startFillMatch();
+  const early = N.prof && N.prof.rating < FILL_CAP;
+  waitUI('対戦相手を探しています', `ランクマッチで探しています… ${s}秒` + (!early && s >= 15 ? '\nなかなか見つからないときは、CPUと練習もできます' : ''), { cpu: !early && s >= 15 });
+  if (early && Date.now() - N.t0 >= N.fillAt) startFillMatch();
 }
 async function scanRanked() {
   if (N.phase !== 'search' || N.scanning) return;
@@ -1448,11 +1493,11 @@ function shareResult() {
   const t = o.kind === 'draw' ? '引き分けでした。' : o.kind === 'call'
     ? `お題${fmtT(M.targetCs)}秒で、合計は${fmtCs(o.total)}秒。${o.caller === M.me ? '自分の' : '相手の'}「超えた」が${o.exceeded ? '当たって' : 'はずれて'}、${won ? '勝ちました！' : '負けました…'}`
     : (won ? '不戦勝でした。' : '不戦敗でした…');
-  shareText('【ボタンで秒数ゲーム】' + t + '\n超えたと思ったら、勝負！', SHARE_URL(), 'share_result');
+  shareText('【体内時計バトル】' + t + '\n超えたと思ったら、勝負！', SHARE_URL(), 'share_result');
 }
 function shareRoom() {
   if (!N.code) return;
-  shareText('【ボタンで秒数ゲーム】対戦しよう！　合言葉は ' + N.code, location.origin + location.pathname + '?room=' + N.code, 'share_room');
+  shareText('【体内時計バトル】対戦しよう！　合言葉は ' + N.code, location.origin + location.pathname + '?room=' + N.code, 'share_room');
 }
 
 /* ---------- 起動 ---------- */

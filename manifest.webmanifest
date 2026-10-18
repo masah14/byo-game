@@ -1,6 +1,6 @@
 {
-  "name": "ボタンで秒数ゲーム",
-  "short_name": "秒数ゲーム",
+  "name": "体内時計バトル",
+  "short_name": "体内時計バトル",
   "description": "お題の秒数を超えたと思ったら「超えた」ボタン。2人で時間を読み合う対戦ゲーム。",
   "start_url": "./",
   "display": "standalone",
