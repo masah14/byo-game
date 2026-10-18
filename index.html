@@ -944,8 +944,10 @@ function botAct() {
 /* ---------- ランクマッチの、もう一方の動かし方（くせをつける） ----------
    時間の感じ方に、かたよりとゆらぎがある／最初の計測は、長めに押す／お題に近づくと、短く、ちょんと押す／
    ときどき、少し早まって「超えた」を押す／考える時間が、毎回ちがって、ときどき長く止まる。 */
-function humanProfile() {
-  return { bias: 0.92 + Math.random() * 0.16, kOwn: 0.05 + Math.random() * 0.06, kOpp: 0.09 + Math.random() * 0.1, aggr: Math.random(), speed: 0.6 + Math.random() * 1.1 };
+function humanProfile(rating) {
+  const s = clamp(((rating || 1000) - 1200) / 300, 0, 1);   // レート1200を超えたら、少しずつ強くする（1500で、いちばん強い）：時間の感じ方のゆらぎが小さく、早まって押すことが少ない
+  const f = 1 - 0.55 * s;
+  return { bias: 1 + (-0.08 + Math.random() * 0.16) * (1 - 0.7 * s), kOwn: (0.05 + Math.random() * 0.06) * f, kOpp: (0.09 + Math.random() * 0.1) * f, aggr: Math.random() * (1 - 0.7 * s), speed: 0.6 + Math.random() * 1.1 };
 }
 const guestName = () => { let n; do { n = 'ゲスト' + randInt(10, 99); } while (n === S.name); return n; };
 function thinkMs() {
@@ -1025,7 +1027,7 @@ async function startFillMatch() {
   netClose();
   act = actCpu;
   const { mode, fa } = rankedParams();
-  beginMatch({ kind: 'ranked', local: true, hp: humanProfile(), mode, targetCs: randTarget(mode), names: [safeName(), guestName()], uids: [FB.uid, null], me: 0, first: fa ? 0 : 1, oppRating: 0, rateResult: null, rateDone: false });
+  beginMatch({ kind: 'ranked', local: true, hp: humanProfile(N.prof ? N.prof.rating : 1000), mode, targetCs: randTarget(mode), names: [safeName(), guestName()], uids: [FB.uid, null], me: 0, first: fa ? 0 : 1, oppRating: 0, rateResult: null, rateDone: false });
 }
 
 function startCpu() {
@@ -1127,7 +1129,7 @@ function cancelWait() {
 }
 
 /* ---------- ランクマッチ（レート戦） ---------- */
-const FILL_K = 24, FILL_CAP = 1200;   // 序盤の人（レート FILL_CAP 未満）が、通信を使わない対戦で、1回に動かせる幅の上限（ルールと同じ値）
+const FILL_K = 24, FILL_CAP = 1500;   // 通信を使わない対戦で、レートを動かせる人（レート FILL_CAP 未満）が、通信を使わない対戦で、1回に動かせる幅の上限（ルールと同じ値）
 const RATE_K = { easy: 16, normal: 24, hard: 32 };   // 難易度ごとの、レートの動く幅の上限（ルールと同じ値）
 // 難易度と先行・後攻は、対戦IDから決まる（ルールが検算する。作る側が、有利な組み合わせを選べない）
 function rankedParams() {
