@@ -255,7 +255,7 @@ svg.led .led-on{filter:drop-shadow(0 0 1.6px rgba(70,255,126,.85))}
 .busy i{width:34px;height:34px;border-radius:50%;border:4px solid var(--soft2);border-top-color:var(--ink);animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .turn{display:none;position:absolute;inset:0;z-index:40;background:var(--bg);align-items:center;justify-content:center;text-align:center;padding:30px;font-weight:700}
-@media (orientation:landscape) and (max-height:480px) and (pointer:coarse){.turn{display:flex}}
+.land .turn{display:flex}   /* 横向きの警告：画面の向きで決める（JS）。キーボードが出て、表示領域が小さくなっても、出さない */
 @media (max-height:700px){
   .coin-stage{height:240px;zoom:.8}
   #b-main{width:140px;height:140px;font-size:22px;border-width:11px}#b-call{height:58px}.g-clock{max-width:240px}.g-cap b{font-size:36px}.g-ctl{gap:14px}.hero-watch{width:190px}.hero-art .dome{width:56px}.hero-title{font-size:28px}.g-state b{font-size:28px}
@@ -1559,6 +1559,19 @@ function shareRoom() {
 }
 
 /* ---------- 起動 ---------- */
+// 横向きの警告：スマホの「画面の向き」で決める。表示領域の縦横では決めない（キーボードが出ると、縦が縮んで、横向きと勘違いしてしまうため）
+function updateLand() {
+  let land = false;
+  try {
+    // iPhone と、多くのAndroid は、window.orientation（0／90／-90）が、いちばん確か。なければ、screen.orientation、それもなければ、画面の大きさ
+    const t = screen.orientation && screen.orientation.type;
+    land = typeof window.orientation === 'number' ? Math.abs(window.orientation) === 90 : (t ? t.indexOf('landscape') === 0 : screen.width > screen.height);
+  } catch (e) {}
+  const phone = Math.min(screen.width, screen.height) < 600 && matchMedia('(pointer:coarse)').matches;
+  document.documentElement.classList.toggle('land', land && phone);
+}
+updateLand(); addEventListener('orientationchange', updateLand); addEventListener('resize', updateLand);
+try { screen.orientation.addEventListener('change', updateLand); } catch (e) {}
 resetM();
 buildMenu();
 updateMenu();
