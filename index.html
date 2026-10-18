@@ -957,6 +957,8 @@ function botAct() {
   const sigma = Math.sqrt(v) + 12, z = (est - M.targetCs) / sigma;
   const pOver = 1 / (1 + Math.exp(-1.702 * z));   // 「超えている」と思う気持ちの強さ
   if (pOver > 0.72 || (M.turns.length >= 2 && pOver > 0.6 && Math.random() < 0.3)) { sfx.call(); actCpu.call(bot); return; }
+  // ときどき、お題が近くなると、まだ超えていないのに、早まって「超えた」を押す（お手つき）
+  if (M.turns.length >= 2 && est / M.targetCs > 0.8 && est / M.targetCs < 1 && Math.random() < 0.1) { sfx.call(); actCpu.call(bot); return; }
   const room = M.targetCs - est;
   let len;
   if (room > 400) len = clamp(room * (0.12 + Math.random() * 0.18), 60, 400);
