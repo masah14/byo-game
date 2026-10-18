@@ -847,9 +847,9 @@ function watchBarForFx(total, T, dur) {
     const el = performance.now() - t0;
     let hit = false;
     if (crosses) {
-      let right = 0; $$('#rs-bar i').forEach(i => { const r = i.getBoundingClientRect(); if (r.width > 0.5) right = Math.max(right, r.right); });
+      let right = 0; $$('#rs-bar i').forEach(i => { const r = i.getBoundingClientRect(); if (r.width > 2.5) right = Math.max(right, r.right); });
       hit = right >= $('#rs-mark').getBoundingClientRect().left - 16;
-    } else hit = el >= dur + 150;
+    } else hit = el >= dur;   // 線を超えない勝ち：ゲージが止まった瞬間
     if (hit || el > 4000) { clearInterval(M.timers.fxw); playWinFx(); }
   }, 25);
 }
