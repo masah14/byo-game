@@ -1317,14 +1317,15 @@ function renderRate() {
   el.hidden = false;
 }
 // ランキング（レート順の上位）
+const RANK_MIN = 10;   // 参加者が、この人数になるまで、ランキングは「準備中」にする
 function renderRanking(list, myId, myRate) {
-  const top = list.slice(0, 30), at = list.findIndex(x => x.id === myId);
+  const top = list.slice(0, 30), at = list.findIndex(x => x.id === myId), ready = list.length >= RANK_MIN;
   $('#rk-me').innerHTML = myRate
-    ? `<div class="rk-mine"><small>あなたのレート</small><b>${myRate.rating}</b><span>${at >= 0 ? (at + 1) + '位' : (myRate.games ? '圏外' : '')}</span></div>`
+    ? `<div class="rk-mine"><small>あなたのレート</small><b>${myRate.rating}</b><span>${ready ? (at >= 0 ? (at + 1) + '位' : (myRate.games ? '圏外' : '')) : ''}</span></div>`
     : '';
-  $('#rk-list').innerHTML = top.length
+  $('#rk-list').innerHTML = ready
     ? top.map((x, i) => `<li class="${x.id === myId ? 'me' : ''}"><span class="n">${i + 1}</span><span class="nm">${esc(x.name)}</span><span class="rt">${x.rating}</span></li>`).join('')
-    : '<li class="rk-empty">まだ、対戦した人がいません。<br>最初の1人になろう！</li>';
+    : '<li class="rk-empty">準備中です。<br>参加者が' + RANK_MIN + '人になったら、公開します。</li>';
 }
 async function openRanking() {
   if (needFb()) return;
