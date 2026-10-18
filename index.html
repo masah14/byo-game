@@ -1270,10 +1270,10 @@ function renderRate() {
 function renderRanking(list, myId, myRate) {
   const top = list.slice(0, 30), at = list.findIndex(x => x.id === myId);
   $('#rk-me').innerHTML = myRate
-    ? `<div class="rk-mine"><small>あなたのレート</small><b>${myRate.rating}</b><span>${myRate.wins}勝 ${myRate.losses}敗${myRate.draws ? ' ' + myRate.draws + '分' : ''}（${myRate.games}戦）${at >= 0 ? '　' + (at + 1) + '位' : (myRate.games ? '　圏外' : '')}</span></div>`
+    ? `<div class="rk-mine"><small>あなたのレート</small><b>${myRate.rating}</b><span>${at >= 0 ? (at + 1) + '位' : (myRate.games ? '圏外' : '')}</span></div>`
     : '';
   $('#rk-list').innerHTML = top.length
-    ? top.map((x, i) => `<li class="${x.id === myId ? 'me' : ''}"><span class="n">${i + 1}</span><span class="nm">${esc(x.name)}<small>${x.wins}勝 ${x.losses}敗（${x.games}戦）</small></span><span class="rt">${x.rating}</span></li>`).join('')
+    ? top.map((x, i) => `<li class="${x.id === myId ? 'me' : ''}"><span class="n">${i + 1}</span><span class="nm">${esc(x.name)}</span><span class="rt">${x.rating}</span></li>`).join('')
     : '<li class="rk-empty">まだ、対戦した人がいません。<br>最初の1人になろう！</li>';
 }
 async function openRanking() {
@@ -1439,7 +1439,7 @@ function updateMenu() {
   $('#in-name').value = S.name;
   $$('#mode-seg button').forEach(b => b.classList.toggle('on', b.dataset.k === S.mode));
   const c = S.rec.cpu, o = S.rec.online, el = $('#m-rec'), parts = [];
-  if (S.rate && S.rate.games) parts.push(`レート ${S.rate.rating}（${S.rate.wins}勝${S.rate.losses}敗）`);
+  if (S.rate && S.rate.games) parts.push(`レート ${S.rate.rating}`);
   if (o[0] + o[1]) parts.push(`友達 ${o[0]}勝${o[1]}敗`);
   if (c[0] + c[1]) parts.push(`CPU ${c[0]}勝${c[1]}敗`);
   el.hidden = !parts.length; el.textContent = parts.join('　');
