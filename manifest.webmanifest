@@ -1,0 +1,11 @@
+{
+  "name": "ボタンで秒数ゲーム",
+  "short_name": "秒数ゲーム",
+  "description": "お題の秒数を超えたと思ったら「超えた」ボタン。2人で時間を読み合う対戦ゲーム。",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e1b2c",
+  "theme_color": "#0e1b2c",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

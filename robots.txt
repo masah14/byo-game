@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://byo.sakamoto-games.com/sitemap.xml

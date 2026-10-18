@@ -1,0 +1,1106 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0e1b2c">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7039412568193199" crossorigin="anonymous"></script>
+<meta name="description" content="お題の秒数を超えたと思ったら「超えた」ボタン。スタートとストップを交互に押して、合計の時間を感覚で読み合う、2人対戦のゲームです。友達とも、知らない人とも、オンラインで遊べます。">
+<link rel="canonical" href="https://byo.sakamoto-games.com/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://byo.sakamoto-games.com/?v=1">
+<meta property="og:site_name" content="ボタンで秒数ゲーム">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:title" content="ボタンで秒数ゲーム｜お題の秒数、もう超えた？">
+<meta property="og:description" content="スタートとストップを交互に押して、合計の時間を感覚で読み合う。超えたと思ったら「超えた」ボタン。当たれば勝ち、はずれれば負け。">
+<meta property="og:image" content="https://byo.sakamoto-games.com/og.png?v=1">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="ボタンで秒数ゲーム：お題の秒数を超えたと思ったら、超えたボタンを押す2人対戦ゲーム">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://byo.sakamoto-games.com/og.png?v=1">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<title>ボタンで秒数ゲーム｜超えたと思ったら勝負</title>
+<style>
+:root{
+  --bg:#0e1b2c; --bg2:#1c3a5e; --paper:#f6f1e7; --ink:#1b2236; --dim:#93a4c0; --line:rgba(246,241,231,.16);
+  --go:#22b573; --go-d:#0f7a4a; --stop:#f2a93b; --stop-d:#a9680f; --call:#e5484d; --call-d:#97262b; --gold:#f2c14e;
+  --me:#34c38f; --op:#6aa7ff;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Source Han Serif JP",serif;
+  --sans:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Noto Sans JP",system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--paper);font-family:var(--sans);overscroll-behavior:none;overflow-x:hidden}
+body{touch-action:manipulation;-webkit-user-select:none;user-select:none;font-size:16px;line-height:1.5}
+button,input{font:inherit;color:inherit}
+[hidden]{display:none!important}
+#app{max-width:480px;margin:0 auto;height:100vh;height:100dvh;position:relative;overflow:hidden;background:radial-gradient(120% 70% at 50% 0%,var(--bg2) 0%,var(--bg) 62%)}
+.screen{position:absolute;inset:0;padding:max(18px,env(safe-area-inset-top)) 20px max(18px,env(safe-area-inset-bottom));display:none;flex-direction:column;gap:14px;overflow-y:auto;overflow-x:hidden;overscroll-behavior-x:none;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.screen.on{display:flex}
+
+/* ボタン */
+.btn{appearance:none;border:0;border-radius:14px;padding:15px 18px;font-weight:700;font-size:17px;cursor:pointer;text-align:center;transition:transform .08s,opacity .2s}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.4;pointer-events:none}
+.btn.primary{background:var(--go);color:#fff}
+.btn.call{background:var(--call);color:#fff}
+.btn.paper{background:var(--paper);color:var(--ink)}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--paper)}
+.btn.small{padding:10px 14px;font-size:14px;border-radius:10px}
+.btn small{display:block;font-weight:400;font-size:12px;opacity:.8;margin-top:2px;letter-spacing:.02em}
+.btn.big{padding:19px 18px;font-size:20px;letter-spacing:.1em;box-shadow:0 5px 0 var(--go-d)}
+.btn.big:active{transform:translateY(3px);box-shadow:0 2px 0 var(--go-d)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.icon-btn{appearance:none;background:rgba(246,241,231,.1);border:0;width:40px;height:40px;border-radius:50%;font-size:18px;cursor:pointer;flex:none}
+.back{align-self:flex-start;background:none;border:0;color:var(--dim);font-size:15px;padding:6px 0;cursor:pointer}
+h2{font-family:var(--serif);font-size:26px;margin:0;letter-spacing:.06em}
+.lead{color:var(--dim);margin:0;text-align:center}
+.note{color:var(--dim);font-size:13px;margin:0}
+.label{color:var(--dim);font-size:14px}
+.sect{display:flex;flex-direction:column;gap:8px}
+.field{display:flex;align-items:center;gap:10px;background:rgba(246,241,231,.08);border-radius:12px;padding:6px 14px}
+.field span{color:var(--dim);font-size:14px;flex:none}
+.field input{flex:1;min-width:0;background:none;border:0;outline:0;padding:8px 0;font-size:17px;-webkit-user-select:text;user-select:text}
+.card{background:var(--paper);color:var(--ink);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.card h3{margin:0;font-family:var(--serif);font-size:21px;letter-spacing:.05em}
+.card p{margin:0;font-size:14px;color:#4a536b}
+.code-in{width:100%;background:#e9e3d4;color:var(--ink);border:0;border-radius:12px;font-size:30px;letter-spacing:.4em;text-align:center;padding:12px;outline:0;text-transform:uppercase;font-family:var(--serif);-webkit-user-select:text;user-select:text}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.seg button{appearance:none;border:1.5px solid var(--line);background:rgba(246,241,231,.05);border-radius:12px;padding:10px 4px;cursor:pointer;line-height:1.3}
+.seg button b{display:block;font-size:15px}
+.seg button small{display:block;font-size:12px;color:var(--dim)}
+.seg button.on{border-color:var(--gold);background:rgba(242,193,78,.14)}
+.seg button.on small{color:var(--gold)}
+.switch{display:flex;align-items:center;gap:12px;background:rgba(246,241,231,.08);border-radius:12px;padding:12px 14px;cursor:pointer}
+.switch input{appearance:none;-webkit-appearance:none;width:46px;height:28px;border-radius:14px;background:#3a4668;position:relative;flex:none;transition:background .2s;outline:0}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s}
+.switch input:checked{background:var(--go)}
+.switch input:checked::after{transform:translateX(18px)}
+.switch b{display:block;font-size:15px}
+
+/* メニュー */
+.hero{display:flex;flex-direction:column;align-items:center;gap:2px;padding-top:4px;text-align:center}
+.hero-watch{width:150px;height:164px;margin-bottom:-4px;animation:bob 3.6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-6px) rotate(2deg)}}
+.hero-title{margin:0;font-family:var(--serif);font-size:34px;line-height:1.15;letter-spacing:.06em}
+.hero-sub{margin:4px 0 0;color:var(--gold);font-weight:700;letter-spacing:.12em}
+.menu-btns{display:flex;flex-direction:column;gap:12px}
+.rec{text-align:center;color:var(--dim);font-size:13px}
+.tips{background:rgba(246,241,231,.06);border-radius:14px;padding:14px 16px}
+.tips h3{margin:0 0 6px;font-family:var(--serif);font-size:16px;letter-spacing:.05em}
+.tips p{margin:0;color:var(--dim);font-size:13px;line-height:1.7}
+.ad-slot{flex:none;margin-top:28px;text-align:center;overflow:hidden;min-height:100px}
+.ad-slot small{display:block;color:var(--dim);font-size:11px;margin-bottom:2px}
+.foot{text-align:center;padding:6px 0 4px;font-size:12px}
+.foot a{color:var(--dim)}
+
+/* ストップウォッチの絵 */
+svg.watch{display:block;width:100%;height:100%;overflow:visible}
+svg.watch .wq{font-family:var(--serif);font-size:30px;fill:#2a3a5a;font-weight:700}
+svg.watch .wt{font-family:var(--serif);font-size:44px;fill:#2a3a5a;font-weight:700}
+svg.watch .ring{fill:none;stroke:var(--gold);stroke-width:5;opacity:0;transition:opacity .3s}
+.running svg.watch .ring{opacity:.9;animation:breathe 1.9s ease-in-out infinite}
+@keyframes breathe{0%,100%{stroke-width:3;opacity:.35}50%{stroke-width:9;opacity:1}}
+
+/* 待機 */
+#s-wait{align-items:center;text-align:center;justify-content:center}
+.w-code{font-family:var(--serif);font-size:64px;letter-spacing:.25em;padding-left:.25em;line-height:1.1}
+.w-dots{display:flex;gap:8px;margin:6px 0}
+.w-dots i{width:10px;height:10px;border-radius:50%;background:var(--gold);animation:dot 1.2s ease-in-out infinite}
+.w-dots i:nth-child(2){animation-delay:.2s}.w-dots i:nth-child(3){animation-delay:.4s}
+@keyframes dot{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+#s-wait .btn{width:100%;max-width:320px}
+
+/* ゲーム */
+#s-game{gap:10px;padding-left:16px;padding-right:16px}
+.g-top{display:flex;align-items:center;gap:10px}
+#g-quit{background:rgba(246,241,231,.12)}
+.g-target{flex:1;text-align:center;background:var(--paper);color:var(--ink);border-radius:16px;padding:6px 14px 4px;box-shadow:0 3px 10px rgba(0,0,0,.25)}
+.g-target small{display:block;font-size:12px;color:#5b6477;letter-spacing:.1em}
+.g-target b{font-family:var(--serif);font-size:46px;line-height:1.05;color:#c0392b;font-variant-numeric:tabular-nums}
+.g-target b i{font-size:20px;font-style:normal;margin-left:2px}
+.g-sp{width:40px;flex:none}
+.g-players{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pc{display:flex;align-items:center;gap:8px;background:rgba(246,241,231,.07);border:2px solid transparent;border-left:5px solid var(--c);border-radius:14px;padding:7px 10px;min-width:0;transition:background .2s,border-color .2s}
+.pc.me{--c:var(--me)}.pc.op{--c:var(--op)}
+.pc.cur{border-color:var(--gold);border-left-color:var(--gold);background:rgba(242,193,78,.13)}
+.pc .nm{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc .tg{font-size:11px;color:var(--dim)}
+.pc>div{min-width:0}
+.g-watch{flex:1;min-height:120px;display:flex;align-items:center;justify-content:center;padding:4px 0}
+.g-watch .wbox{height:100%;max-height:230px;aspect-ratio:220/244}
+.g-state{text-align:center;font-weight:700;min-height:3em;white-space:pre-line;line-height:1.45}
+.g-log{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:26px}
+.lg{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:#0e1b2c;background:var(--c)}
+.lg.me{--c:var(--me)}.lg.op{--c:var(--op)}
+.lg.now{animation:blink 1.4s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:.35}50%{opacity:1}}
+.g-ctl{display:flex;flex-direction:column;align-items:center;gap:20px;padding-bottom:4px}
+#b-main{appearance:none;border:0;width:158px;height:158px;border-radius:50%;font-weight:700;font-size:26px;letter-spacing:.08em;color:#fff;cursor:pointer;background:var(--go);box-shadow:0 7px 0 var(--go-d),0 12px 20px rgba(0,0,0,.3);transition:transform .06s,box-shadow .06s,background .15s;touch-action:manipulation}
+#b-main:active{transform:translateY(5px);box-shadow:0 2px 0 var(--go-d),0 4px 8px rgba(0,0,0,.3)}
+#b-main.stop{background:var(--stop);color:#3a2300;box-shadow:0 7px 0 var(--stop-d),0 12px 20px rgba(0,0,0,.3)}
+#b-main.stop:active{box-shadow:0 2px 0 var(--stop-d),0 4px 8px rgba(0,0,0,.3)}
+#b-main:disabled{background:#3a4668;color:#8f9bb8;box-shadow:0 7px 0 #27304a;font-size:20px}
+#b-call{width:100%;max-width:340px;font-size:22px;letter-spacing:.2em;box-shadow:0 5px 0 var(--call-d)}
+#b-call:active{transform:translateY(3px);box-shadow:0 2px 0 var(--call-d)}
+#b-call:disabled{box-shadow:none}
+.g-intro{position:absolute;inset:0;z-index:5;background:rgba(14,27,44,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center}
+.coin-wrap{perspective:700px}
+.coin{width:130px;height:130px;position:relative;transform-style:preserve-3d;animation:flip 1.7s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes flip{from{transform:rotateY(0)}to{transform:rotateY(var(--end))}}
+.coin b{position:absolute;inset:0;border-radius:50%;display:grid;place-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;font-family:var(--serif);font-size:58px;border:6px solid rgba(255,255,255,.35)}
+.coin .f{background:var(--gold);color:#5b3d00}
+.coin .b{background:#9fb0cf;color:#1b2236;transform:rotateY(180deg)}
+.g-intro h3{margin:0;font-family:var(--serif);font-size:30px;letter-spacing:.08em}
+.g-intro p{margin:0;color:var(--dim)}
+.g-intro .tgt{color:var(--gold);font-weight:700;font-size:18px}
+
+/* 結果 */
+#s-result{gap:12px}
+.rs-banner{text-align:center;font-family:var(--serif);font-size:46px;line-height:1.1;letter-spacing:.08em;padding-top:6px}
+.rs-banner.win{color:var(--gold)}
+.rs-banner.lose{color:#aab6cf}
+.rs-why{margin:0;text-align:center;color:var(--paper);font-weight:700;white-space:pre-line}
+.rs-card{background:rgba(246,241,231,.07);border-radius:16px;padding:14px 14px 12px}
+.bar-wrap{position:relative;padding-top:24px}
+.bar{display:flex;height:28px;border-radius:8px;overflow:hidden;background:rgba(246,241,231,.1)}
+.bar i{display:block;height:100%;width:0;background:var(--c);border-right:2px solid rgba(14,27,44,.55);transition:width .5s ease-out var(--d,0s)}
+.bar i.me{--c:var(--me)}.bar i.op{--c:var(--op)}
+.bar.go i{width:var(--w)}
+.bar-mark{position:absolute;top:14px;bottom:-4px;width:0;border-left:3px dashed #ff8a8a}
+.bar-mark span{position:absolute;top:-17px;left:0;transform:translateX(-50%);font-size:12px;font-weight:700;color:#ff8a8a;white-space:nowrap}
+.rs-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center;margin-top:12px}
+.rs-nums div small{display:block;font-size:12px;color:var(--dim)}
+.rs-nums div b{font-family:var(--serif);font-size:24px;font-variant-numeric:tabular-nums}
+.rs-nums div b.hit{color:var(--gold)}
+.rs-turns{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.rs-turns li{display:flex;align-items:center;gap:10px;font-size:14px;padding:3px 4px}
+.rs-turns li .lg{width:22px;height:22px;font-size:11px}
+.rs-turns li b{margin-left:auto;font-variant-numeric:tabular-nums}
+.rs-turns li.call b{color:var(--call)}
+.rs-note{margin:0;text-align:center;font-size:12px;color:var(--dim)}
+
+/* 部品 */
+.modal{position:absolute;inset:0;z-index:20;background:rgba(5,10,20,.7);display:flex;align-items:center;justify-content:center;padding:20px}
+.modal .box{background:var(--paper);color:var(--ink);border-radius:18px;padding:20px;width:100%;max-width:400px;max-height:92%;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.modal .box h3{margin:0;font-family:var(--serif);font-size:22px}
+.modal .box p{margin:0;font-size:14px;color:#4a536b;line-height:1.7;white-space:pre-line}
+.modal .box ol{margin:0;padding-left:20px;font-size:14px;line-height:1.7;color:#2f3850}
+.modal .box ol li{margin-bottom:4px}
+.toast{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 28px);transform:translate(-50%,20px);background:rgba(246,241,231,.97);color:var(--ink);padding:10px 18px;border-radius:22px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:30;max-width:90%;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.busy{position:absolute;inset:0;z-index:25;background:rgba(5,10,20,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.busy i{width:34px;height:34px;border-radius:50%;border:4px solid rgba(246,241,231,.25);border-top-color:var(--gold);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.turn{display:none;position:absolute;inset:0;z-index:40;background:var(--bg);align-items:center;justify-content:center;text-align:center;padding:30px;font-weight:700}
+@media (orientation:landscape) and (max-height:480px) and (pointer:coarse){.turn{display:flex}}
+@media (max-height:700px){
+  #b-main{width:128px;height:128px;font-size:22px}.g-target b{font-size:38px}.g-ctl{gap:14px}.hero-watch{width:110px;height:120px}.hero-title{font-size:28px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- メニュー -->
+  <section id="s-menu" class="screen on">
+    <div class="hero">
+      <div class="hero-watch" id="hero-watch"></div>
+      <h1 class="hero-title">ボタンで<br>秒数ゲーム</h1>
+      <p class="hero-sub">お題の秒数、もう超えた？</p>
+    </div>
+    <label class="field"><span>名前</span><input id="in-name" maxlength="10" autocomplete="off" placeholder="名前"></label>
+    <div class="sect">
+      <span class="label">モード（お題の秒数）</span>
+      <div class="seg" id="mode-seg"></div>
+    </div>
+    <div class="menu-btns">
+      <button class="btn primary big" id="b-random" type="button">ランダムで対戦<small>知らない人と、オンラインで1回勝負</small></button>
+      <button class="btn paper" id="b-room" type="button">友達と対戦<small>4文字の合言葉で、同じ部屋に入る</small></button>
+      <button class="btn paper" id="b-cpu" type="button">CPUと練習<small>ひとりで、ルールを覚える</small></button>
+      <div class="row2">
+        <button class="btn ghost" id="b-how" type="button">遊び方</button>
+        <button class="btn ghost" id="b-set" type="button">設定</button>
+      </div>
+    </div>
+    <div class="rec" id="m-rec" hidden></div>
+    <div class="tips">
+      <h3>どんなゲーム？</h3>
+      <p>お題の秒数（たとえば5秒）が決まったら、2人が交互に、ボタンでスタートとストップを押して、時間を計ります。時間の数字は、ずっと見えません。ふたりが計った時間は、足し算で増えていきます。合計がお題を超えたと思ったら「超えた」ボタン。当たっていれば、押した人の勝ちです。</p>
+    </div>
+    <div class="ad-slot" data-ad hidden></div>
+    <footer class="foot"><a href="about.html">遊び方・よくある質問</a>　<a href="privacy.html">プライバシーポリシー</a>　<a href="mailto:info@sakamoto-games.com">お問い合わせ</a></footer>
+  </section>
+
+  <!-- 友達と対戦 -->
+  <section id="s-room" class="screen">
+    <button class="back" data-go="s-menu" type="button">← 戻る</button>
+    <h2>友達と対戦</h2>
+    <p class="note">どちらかが部屋を作って、4文字の合言葉を、友達に伝えます。</p>
+    <div class="card">
+      <h3>部屋を作る</h3>
+      <p id="rm-mode"></p>
+      <button class="btn primary" id="rm-create" type="button">部屋を作る</button>
+    </div>
+    <div class="card">
+      <h3>部屋に入る</h3>
+      <input class="code-in" id="rm-code" maxlength="4" inputmode="latin" autocomplete="off" placeholder="CODE">
+      <button class="btn primary" id="rm-join" type="button">入る</button>
+    </div>
+  </section>
+
+  <!-- 待機（相手を探す／友達を待つ） -->
+  <section id="s-wait" class="screen">
+    <h2 id="w-title"></h2>
+    <div class="w-code" id="w-code" hidden>----</div>
+    <div class="w-dots"><i></i><i></i><i></i></div>
+    <p class="lead" id="w-msg" style="white-space:pre-line"></p>
+    <button class="btn ghost small" id="w-share" type="button" hidden>招待リンクをシェア</button>
+    <button class="btn paper" id="w-cpu" type="button" hidden>CPUと練習する</button>
+    <button class="btn ghost" id="w-cancel" type="button">やめる</button>
+  </section>
+
+  <!-- ゲーム -->
+  <section id="s-game" class="screen">
+    <div class="g-top">
+      <button class="icon-btn" id="g-quit" type="button" aria-label="やめる">✕</button>
+      <div class="g-target"><small id="g-mode">お題</small><b><span id="g-tnum">5</span><i>秒</i></b></div>
+      <div class="g-sp"></div>
+    </div>
+    <div class="g-players" id="g-players"></div>
+    <div class="g-watch" id="g-watch"><div class="wbox" id="g-wbox"></div></div>
+    <div class="g-state" id="g-state"></div>
+    <div class="g-log" id="g-log"></div>
+    <div class="g-ctl">
+      <button id="b-main" type="button">スタート</button>
+      <button class="btn call" id="b-call" type="button">超えた！</button>
+    </div>
+    <div class="g-intro" id="g-intro" hidden>
+      <div class="coin-wrap"><div class="coin" id="g-coin"><b class="f">先</b><b class="b">後</b></div></div>
+      <h3 id="gi-h"></h3>
+      <p id="gi-p"></p>
+      <p class="tgt" id="gi-t"></p>
+    </div>
+  </section>
+
+  <!-- 結果 -->
+  <section id="s-result" class="screen">
+    <div class="rs-banner" id="rs-banner"></div>
+    <p class="rs-why" id="rs-why"></p>
+    <div class="rs-card">
+      <div class="bar-wrap"><div class="bar" id="rs-bar"></div><div class="bar-mark" id="rs-mark"><span>お題</span></div></div>
+      <div class="rs-nums">
+        <div><small>お題</small><b id="rs-t">-</b></div>
+        <div><small>ふたりの合計</small><b id="rs-total">-</b></div>
+        <div><small id="rs-dl">差</small><b id="rs-diff">-</b></div>
+      </div>
+    </div>
+    <div class="rs-card"><ul class="rs-turns" id="rs-turns"></ul></div>
+    <p class="rs-note">ちょうど（同じ）は、「超えていない」扱いです。</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn primary" id="rs-again" type="button">もう一度</button>
+      <button class="btn paper" id="rs-share" type="button">結果をシェア</button>
+      <button class="btn ghost" id="rs-menu" type="button">メニューへ</button>
+    </div>
+    <!-- 広告は、ボタンの下に、間をあけて置く（誤クリック防止） -->
+    <div class="ad-slot" data-ad hidden style="margin-top:48px"></div>
+  </section>
+
+  <!-- 設定 -->
+  <section id="s-set" class="screen">
+    <button class="back" data-go="s-menu" type="button">← 戻る</button>
+    <h2>設定</h2>
+    <label class="switch"><input type="checkbox" id="se-mute"><span><b>効果音をオフ</b></span></label>
+    <label class="switch"><input type="checkbox" id="se-vib"><span><b>振動をオフ</b></span></label>
+    <button class="btn ghost small" id="se-reset" type="button">戦績を消す</button>
+  </section>
+
+  <div class="modal" id="m-how" hidden>
+    <div class="box">
+      <h3>遊び方</h3>
+      <ol>
+        <li>先行・後攻が決まり、<b>お題の秒数</b>（たとえば5秒）が出ます。</li>
+        <li>自分の番に、<b>スタート</b>を押して、好きなところで<b>ストップ</b>を押します。時間の数字は、<b>見えません</b>。</li>
+        <li>ふたりが計った時間は、<b>足し算</b>で増えていきます。相手の番も、頭の中で数えておきましょう。</li>
+        <li>合計が、お題を超えたと思ったら、自分の番に<b>「超えた」</b>を押します。</li>
+        <li>本当に超えていたら、<b>押した人の勝ち</b>。超えていなければ、押した人の負け。ちょうどは「超えていない」です。</li>
+        <li>「スタート／ストップ」と「超えた」は、<b>同じ番には押せません</b>。1回の計測は、0.5秒以上です。最初の番は、まだ何も計っていないので、「超えた」は押せません。</li>
+      </ol>
+      <button class="btn primary" id="m-how-ok" type="button">OK</button>
+    </div>
+  </div>
+
+  <div class="modal" id="m-ask" hidden>
+    <div class="box">
+      <h3 id="ask-t"></h3>
+      <p id="ask-p"></p>
+      <button class="btn primary" id="ask-ok" type="button">OK</button>
+      <button class="btn ghost" id="ask-no" type="button" style="color:var(--ink);border-color:#1b223655">やめる</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div class="busy" id="busy" hidden><i></i><span id="busy-t">つないでいます…</span></div>
+  <div class="turn">スマホを縦向きにして遊んでください</div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtCs = cs => (cs / 100).toFixed(2);   // 1/100秒の整数 → 「1.23」
+
+/* ---------- 保存 ---------- */
+const KEY = 'byo-v1';
+let S = { name: '', mute: false, novib: false, mode: 'normal', rec: { cpu: [0, 0], online: [0, 0] }, seenHow: false };
+try {
+  const j = JSON.parse(localStorage.getItem(KEY) || '{}');
+  S = Object.assign(S, j);
+  S.rec = Object.assign({ cpu: [0, 0], online: [0, 0] }, j.rec || {});
+} catch (e) {}
+if (!S.name) S.name = 'ゲスト' + randInt(10, 99);
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+/* ---------- 共有するURL ---------- */
+// 共有画像（og.png）を変えたら、この数字を上げる。LINE や X は、URLごとに、プレビューの画像を覚えている
+const SHARE_VER = 1;
+const SHARE_URL = () => location.origin + location.pathname + '?v=' + SHARE_VER;
+
+/* ---------- アクセス解析（Google アナリティクス） ---------- */
+// 測定ID（'G-' から始まる）を入れると、有効になる。空のあいだは、何も送らない
+// URLに ?ga=off を付けて開くと、この端末だけ数えない（運営のテスト用）。?ga=on で、もとに戻る
+const GA_ID = '';
+let GA_OFF = false;
+try { const q = new URLSearchParams(location.search).get('ga'); if (q === 'off') localStorage.setItem('byo-ga', 'off'); if (q === 'on') localStorage.removeItem('byo-ga'); GA_OFF = localStorage.getItem('byo-ga') === 'off'; } catch (e) {}
+const GA_ON = !!GA_ID && !GA_OFF && !/^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+if (GA_ON) {
+  window.dataLayer = window.dataLayer || []; window.gtag = function () { dataLayer.push(arguments); };
+  gtag('js', new Date()); gtag('config', GA_ID, { allow_google_signals: false, allow_ad_personalization_signals: false });
+  const sc = document.createElement('script'); sc.async = true; sc.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(GA_ID); document.head.appendChild(sc);
+}
+// イベント名：play_start_<モード>、play_finish_<モード>、share_result
+const track = (name, p) => { if (GA_ON) { try { gtag('event', name, p || {}); } catch (e) {} } };
+
+/* ---------- 名前の禁止ワード ---------- */
+// 全角・半角、カタカナ・ひらがな、すき間の記号、数字での言い換え（1→i など）をそろえて調べる。使えない名前は、入力できず、画面でも「＊＊＊」で隠す
+const nameKey = s => String(s).normalize('NFKC').toLowerCase().replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60)).replace(/[^\p{L}\p{N}]/gu, '');
+const nameLeet = s => nameKey(String(s).normalize('NFKC').toLowerCase().replace(/0/g, 'o').replace(/[1!|]/g, 'i').replace(/3/g, 'e').replace(/[4@]/g, 'a').replace(/[5$]/g, 's').replace(/7/g, 't'));
+const NG_WORDS = [
+  // 暴言・自傷
+  '死ね', 'しねよ', '死んでしまえ', 'くたばれ', '消えろ', '殺す', 'ころす', '殺せ', 'ころせ', '殺してやる', 'ぶっ殺', '自殺', 'じさつ',
+  // 差別・侮辱
+  'きちがい', '気違い', 'ガイジ', '池沼', 'かたわ', 'めくら', 'つんぼ', '支那', 'ジャップ', 'おかま', 'nigger', 'nigga', 'faggot', 'retard', 'chink', 'tranny',
+  // 性的
+  'ちんこ', 'ちんぽ', 'ちんちん', 'まんこ', 'おっぱい', 'セックス', 'オナニー', 'レイプ', '強姦', '痴漢', 'きんたま', 'しこしこ', 'フェラ', 'パイズリ', 'ビッチ', 'やりまん', 'ポルノ', 'porn', 'fuck', 'ふぁっく', 'dick', 'pussy', 'cunt', 'bitch', 'whore', 'slut', 'rapist',
+  // 運営へのなりすまし
+  '運営', 'うんえい', '管理人', 'かんりにん', '公式', 'admin', 'official',
+].map(nameKey);
+const NG_EXACT = ['しね'];   // 「シネマ」などをまきこまないよう、これだけは、ぴったり一致のときだけ
+const NG_PAT = /https?:|www\.|\.(com|net|jp|org|io|me)\b|@|\d{9,}/;   // URL、メールアドレス、電話番号のような数字
+const badName = s => {
+  const raw = String(s).normalize('NFKC').toLowerCase(), a = nameKey(raw), b = nameLeet(raw);
+  return NG_PAT.test(raw) || NG_EXACT.includes(a) || NG_WORDS.some(w => w && (a.includes(w) || b.includes(w)));
+};
+const cleanName = (s, fallback) => badName(s) ? (fallback || '＊＊＊') : s;
+if (badName(S.name)) S.name = 'ゲスト' + randInt(10, 99);
+const safeName = () => { const n = String(S.name || '').trim().slice(0, 10) || 'ゲスト'; return badName(n) ? 'ゲスト' + randInt(10, 99) : n; };
+
+/* ---------- 定数 ---------- */
+// お題の秒数は、モードごとの範囲（整数の秒）から、ランダムに決まる
+const MODES = [
+  { key: 'easy', name: 'かんたん', lo: 2, hi: 5 },
+  { key: 'normal', name: 'ふつう', lo: 3, hi: 10 },
+  { key: 'hard', name: 'むずかしい', lo: 5, hi: 20 },
+];
+const MODE = Object.fromEntries(MODES.map(m => [m.key, m]));
+if (!MODE[S.mode]) S.mode = 'normal';
+const MIN_CS = 50;      // 1回の計測は、0.5秒以上（ほんの一瞬の計測で、番を飛ばし続けるのを防ぐ）
+const MAX_CS = 3000;    // 1回の計測は、30秒まで（超えたら、自動でストップ）
+const IDLE_MS = 60000;  // 相手の番で、60秒なにも起きなかったら、不戦勝
+const OFF_MS = 20000;   // 相手の通信が切れて、20秒たったら、不戦勝
+const CPU_NAMES = ['タイマーくん', 'ストップ師匠', 'ぴったりさん', 'せっかちケン', 'のんびりハナ'];
+const randTarget = mode => randInt(MODE[mode].lo, MODE[mode].hi) * 100;   // 1/100秒の整数
+
+/* ---------- 広告 ----------
+   Google AdSense の「ca-pub-…」と広告ユニットの slot ID を入れると、メニューと結果画面にだけ広告が出ます。
+   空のままなら、広告は表示されず、枠も出ません。ゲーム中の画面には出しません（誤クリック防止）。 */
+const ADS = { client: 'ca-pub-7039412568193199', slot: '' };   // slot は、審査に通って広告ユニットを作ったら入れる（空のあいだは、広告も枠も出ない）
+function initAds() {
+  if (!ADS.client || !ADS.slot) return;
+  if (!document.querySelector('script[src*="adsbygoogle.js"]')) {
+    const s = document.createElement('script');
+    s.async = true; s.crossOrigin = 'anonymous';
+    s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(ADS.client);
+    document.head.appendChild(s);
+  }
+  $$('[data-ad]').forEach(el => {
+    el.hidden = false;
+    el.innerHTML = '<small>広告</small><ins class="adsbygoogle" style="display:block" data-ad-client="' + esc(ADS.client) + '" data-ad-slot="' + esc(ADS.slot) + '" data-ad-format="auto" data-full-width-responsive="true"></ins>';
+  });
+}
+function pushAds(screenId) {
+  if (!ADS.client || !ADS.slot) return;
+  $$('#' + screenId + ' ins.adsbygoogle').forEach(ins => {
+    if (ins.dataset.pushed) return;
+    ins.dataset.pushed = '1';
+    try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) {}
+  });
+}
+
+/* ---------- 小物 ---------- */
+let toastT;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2600); }
+function busy(msg) { $('#busy-t').textContent = msg || 'つないでいます…'; $('#busy').hidden = false; }
+function idle() { $('#busy').hidden = true; }
+const vib = ms => { if (S.novib) return; try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+let wl = null;
+async function wake(on) { try { if (on && 'wakeLock' in navigator) { if (!wl) wl = await navigator.wakeLock.request('screen'); } else if (wl) { await wl.release(); wl = null; } } catch (e) { wl = null; } }
+document.addEventListener('visibilitychange', () => { if (!document.hidden && current === 's-game') { wl = null; wake(true); } });
+const randHex = n => Array.from(crypto.getRandomValues(new Uint8Array(n / 2)), b => b.toString(16).padStart(2, '0')).join('');
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // 見まちがえやすい文字（0 O 1 I）は使わない
+const randCode = () => Array.from(crypto.getRandomValues(new Uint8Array(4)), b => CODE_CHARS[b % CODE_CHARS.length]).join('');
+
+const sfx = (() => {
+  let ac;
+  const ctx = () => { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); return ac; } catch (e) { return null; } };
+  const tone = (f, t0, d, type = 'sine', v = .07) => {
+    if (S.mute) return; const c = ctx(); if (!c) return;
+    const o = c.createOscillator(), g = c.createGain(), t = c.currentTime + t0;
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(v, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + d + .02);
+  };
+  return {
+    unlock: ctx,
+    tap() { tone(880, 0, .07, 'triangle', .09); },
+    start() { tone(660, 0, .1, 'triangle', .1); tone(990, .07, .12, 'triangle', .1); },
+    stop() { tone(520, 0, .12, 'triangle', .1); tone(390, .08, .16, 'triangle', .1); },
+    op() { tone(740, 0, .06, 'sine', .035); },   // 相手のスタート／ストップ（小さい音）
+    call() { tone(300, 0, .18, 'sawtooth', .05); tone(450, .12, .24, 'sawtooth', .05); },
+    win() { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * .11, .22, 'triangle', .09)); },
+    lose() { tone(330, 0, .25, 'sawtooth', .05); tone(247, .2, .4, 'sawtooth', .05); },
+  };
+})();
+document.addEventListener('pointerdown', () => sfx.unlock(), { once: true });
+
+/* ---------- 画面 ---------- */
+let current = 's-menu';
+function show(id) {
+  current = id;
+  $$('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+  wake(id === 's-game');
+  if (id === 's-menu') updateMenu();
+  if (id === 's-room') $('#rm-mode').textContent = '「' + MODE[S.mode].name + '」（お題は' + MODE[S.mode].lo + '〜' + MODE[S.mode].hi + '秒）で遊びます。モードは、メニューで変えられます。';
+  if (id === 's-set') { $('#se-mute').checked = !!S.mute; $('#se-vib').checked = !!S.novib; }
+  if (id === 's-menu' || id === 's-result') pushAds(id);
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) show(b.dataset.go); });
+
+// 確認のダイアログ（「超えた」の押しまちがい、途中でやめる、など）
+function ask({ title, text, ok, cancel, danger }) {
+  return new Promise(res => {
+    const m = $('#m-ask'), b1 = $('#ask-ok'), b2 = $('#ask-no');
+    $('#ask-t').textContent = title; $('#ask-p').textContent = text || '';
+    b1.textContent = ok || 'OK'; b2.textContent = cancel || 'やめる';
+    b1.className = 'btn ' + (danger ? 'call' : 'primary');
+    m.hidden = false;
+    const done = v => { m.hidden = true; b1.onclick = b2.onclick = null; M.askClose = null; res(v); };
+    b1.onclick = () => done(true); b2.onclick = () => done(false); M.askClose = () => done(false);
+  });
+}
+
+/* ---------- ストップウォッチの絵 ---------- */
+// kind='hero'：針つき（メニュー用）。kind='game'：針なし。時間のヒントになるものは、描かない
+function watchSvg(kind) {
+  let ticks = '';
+  for (let i = 0; i < 60; i++) {
+    const a = i * 6 * Math.PI / 180, big = i % 5 === 0, r1 = big ? 59 : 66, r2 = 72;
+    ticks += `<line x1="${(Math.sin(a) * r1).toFixed(1)}" y1="${(-Math.cos(a) * r1).toFixed(1)}" x2="${(Math.sin(a) * r2).toFixed(1)}" y2="${(-Math.cos(a) * r2).toFixed(1)}" stroke="#2a3a5a" stroke-width="${big ? 3 : 1.4}" stroke-linecap="round"/>`;
+  }
+  const mid = kind === 'hero'
+    ? `<g transform="rotate(38)"><line x1="0" y1="10" x2="0" y2="-52" stroke="#e5484d" stroke-width="4" stroke-linecap="round"/><circle cx="0" cy="-52" r="4.5" fill="#e5484d"/></g><circle r="6" fill="#2a3a5a"/><text x="0" y="42" text-anchor="middle" class="wq">？</text>`
+    : `<text x="0" y="15" text-anchor="middle" class="wt" id="watch-txt">？</text>`;
+  return `<svg viewBox="-110 -122 220 244" class="watch" aria-hidden="true">
+    <rect x="-12" y="-112" width="24" height="18" rx="4" fill="#c9d3e6"/><rect x="-20" y="-118" width="40" height="10" rx="5" fill="#9fb0cf"/>
+    <g transform="rotate(44)"><rect x="-9" y="-108" width="18" height="14" rx="3" fill="#9fb0cf"/></g>
+    <g transform="rotate(-44)"><rect x="-9" y="-108" width="18" height="14" rx="3" fill="#9fb0cf"/></g>
+    <circle r="88" fill="#26395c"/><circle r="80" fill="#f6f1e7"/><circle class="ring" r="86"/>
+    ${ticks}${mid}</svg>`;
+}
+
+/* ---------- ゲームの状態 ----------
+   状態は、「番ごとの記録（recs）」だけから作る（derive）。CPU対戦も、オンライン対戦も、同じ形の記録を作る。
+   recs[n] = { p: 番号(0|1), s: スタートした, d: 計測した長さ（1/100秒）, c: 「超えた」を押した }
+   n番目の番の持ち主は、(first + n) % 2。時間は、各自のスマホが、自分の番の長さを測る（通信の遅れが、勝負に影響しない）。 */
+const M = {};
+function resetM() {
+  clearTimers();
+  Object.assign(M, {
+    on: false, kind: '', mode: 'normal', targetCs: 500, names: ['', ''], uids: [null, null], me: 0, first: 0,
+    recs: [], myT0: 0, turns: [], run: null, over: null, total: 0,
+    live: false, finished: false, leaveBy: null, leaveWhy: '', lastEvt: 0, oppOffAt: 0, prevRun: null, prevTurns: 0, askClose: null,
+  });
+}
+M.timers = {};
+function clearTimers() {
+  Object.values(M.timers || {}).forEach(t => { clearTimeout(t); clearInterval(t); });
+  M.timers = {};
+  if (typeof BOT !== 'undefined') BOT.noise = [];
+  if (M.askClose) M.askClose();
+}
+const owner = () => (M.first + M.turns.length) % 2;
+
+function derive() {
+  const turns = []; let run = null, over = null, total = 0;
+  for (let n = 0; n < M.recs.length; n++) {
+    const r = M.recs[n]; if (!r) break;
+    if (r.p !== (M.first + n) % 2) break;   // 順番ちがいの書き込みは、無視する
+    if (r.c) { over = { kind: 'call', caller: r.p }; break; }
+    if (r.d != null) { const cs = clamp(Math.round(r.d), 0, MAX_CS); turns.push({ p: r.p, cs }); total += cs; continue; }
+    if (r.s) run = { p: r.p, n };
+    break;
+  }
+  if (!over && M.leaveBy != null) over = { kind: M.leaveWhy || 'leave', quitter: M.leaveBy };
+  if (over) {
+    over.total = total;
+    if (over.kind === 'call') { over.exceeded = total > M.targetCs; over.winner = over.exceeded ? over.caller : 1 - over.caller; }
+    else over.winner = 1 - over.quitter;
+  }
+  Object.assign(M, { turns, run, over, total });
+}
+
+// 記録が変わったとき：状態を作り直して、音を鳴らして、画面を直す
+function onChange() {
+  const prevRun = M.prevRun, prevTurns = M.prevTurns;
+  derive();
+  M.lastEvt = Date.now();
+  // 相手のスタート／ストップの小さい音
+  if (M.live && !M.over) {
+    if (M.run && M.run.p !== M.me && !(prevRun && prevRun.n === M.run.n)) sfx.op();
+    if (M.turns.length > prevTurns && M.turns[M.turns.length - 1].p !== M.me) sfx.op();
+  }
+  M.prevRun = M.run; M.prevTurns = M.turns.length;
+  if (M.over) { finishMatch(); return; }
+  renderGame();
+  botStep();
+}
+
+/* ---------- 自分の操作 ---------- */
+const canAct = () => M.on && M.live && !M.over;
+function mainPress() {
+  if (!canAct() || owner() !== M.me) return;
+  if (!M.run) {                                  // スタート
+    M.myT0 = performance.now(); sfx.start(); vib(15);
+    act.start(M.me);
+    clearTimeout(M.timers.auto); M.timers.auto = setTimeout(() => { if (M.run && M.run.p === M.me) stopMine(true); }, MAX_CS * 10);
+  } else if (M.run.p === M.me) {                 // ストップ
+    stopMine(false);
+  }
+}
+function stopMine(forced) {
+  const d = performance.now() - M.myT0;
+  if (!forced && d < MIN_CS * 10) { toast('0.5秒以上は計ってね'); return; }
+  clearTimeout(M.timers.auto);
+  sfx.stop(); vib(25);
+  act.stop(M.me, clamp(Math.round(d / 10), MIN_CS, MAX_CS));
+}
+async function callPress() {
+  if (!canAct() || owner() !== M.me || M.run || !M.turns.length) return;
+  sfx.tap();
+  const ok = await ask({ title: '「超えた」で勝負する？', text: '合計が、お題の' + fmtCs(M.targetCs) + '秒を\n超えていれば、あなたの勝ち。\n超えていなければ（ちょうども）、\nあなたの負けです。', ok: '超えた！', cancel: 'もう少し待つ', danger: true });
+  if (!ok || !canAct() || owner() !== M.me || M.run) return;
+  sfx.call(); vib([30, 40, 60]);
+  act.call(M.me);
+}
+
+/* ---------- 画面の描画 ---------- */
+function renderGame() {
+  const md = MODE[M.mode];
+  $('#g-mode').textContent = md.name + 'のお題';
+  $('#g-tnum').textContent = M.targetCs % 100 ? fmtCs(M.targetCs) : String(M.targetCs / 100);
+  const own = owner() === M.me, ownTurn = canAct() && own;
+  // 2人のカード
+  $('#g-players').innerHTML = [M.me, 1 - M.me].map(p => {
+    const mine = p === M.me, cur = !M.over && M.live && owner() === p;
+    return `<div class="pc ${mine ? 'me' : 'op'}${cur ? ' cur' : ''}"><div><div class="nm">${esc(cleanName(M.names[p] || '…'))}</div><div class="tg">${mine ? 'あなた' : '相手'}・${M.first === p ? '先行' : '後攻'}</div></div></div>`;
+  }).join('');
+  // ストップウォッチ
+  $('#g-watch').classList.toggle('running', !!M.run);
+  const wt = $('#watch-txt'); if (wt) wt.textContent = M.run ? '…' : '？';
+  // 説明の文
+  let st = '';
+  if (M.over) st = M.over.kind === 'call' ? (M.over.caller === M.me ? 'あなたが「超えた」！\n判定中…' : '相手が「超えた」！\n判定中…') : '勝負がつきました';
+  else if (M.live) {
+    if (M.run) st = M.run.p === M.me ? '計測中…\n「ストップ」を押そう' : '相手が計っています…\n（頭の中で数えよう）';
+    else if (own) st = 'あなたの番です\n「スタート」か「超えた」';
+    else st = M.oppOffAt ? '相手の通信が切れています…' : '相手の番です…';
+  }
+  $('#g-state').textContent = st;
+  // これまでの番の記録（長さは、出さない）
+  const chips = M.turns.map((t, i) => `<span class="lg ${t.p === M.me ? 'me' : 'op'}">${i + 1}</span>`);
+  if (M.run && !M.over) chips.push(`<span class="lg now ${M.run.p === M.me ? 'me' : 'op'}">${M.turns.length + 1}</span>`);
+  $('#g-log').innerHTML = chips.join('');
+  // ボタン
+  const bm = $('#b-main'), bc = $('#b-call');
+  const running = M.run && M.run.p === M.me;
+  bm.className = running ? 'stop' : '';
+  bm.textContent = running ? 'ストップ' : (ownTurn ? 'スタート' : '相手の番');
+  bm.disabled = !(ownTurn || running) || !!M.over;
+  bc.disabled = !(ownTurn && !M.run && M.turns.length > 0);   // 1回も計っていない最初の番は、必ず負けるので、押せない
+}
+
+/* ---------- 試合の始まりと終わり ---------- */
+function beginMatch(cfg) {
+  resetM();
+  Object.assign(M, cfg, { on: true, lastEvt: Date.now() });
+  track('play_start_' + M.mode, { kind: M.kind });
+  show('s-game');
+  $('#g-wbox').innerHTML = watchSvg('game');
+  renderGame();
+  // 先行・後攻の発表（コインが回る）
+  const first = M.first === M.me;
+  $('#g-coin').style.setProperty('--end', first ? '1080deg' : '1260deg');
+  $('#g-coin').style.animation = 'none'; void $('#g-coin').offsetWidth; $('#g-coin').style.animation = '';
+  $('#gi-h').textContent = first ? 'あなたは 先行' : 'あなたは 後攻';
+  $('#gi-p').textContent = first ? '最初の番は、あなたです' : '相手が先に始めます';
+  $('#gi-t').textContent = 'お題は ' + (M.targetCs / 100) + ' 秒';
+  $('#g-intro').hidden = false;
+  M.timers.intro = setTimeout(() => {
+    $('#g-intro').hidden = true; M.live = true; M.lastEvt = Date.now();
+    renderGame(); botStep();
+  }, 2800);
+  if (M.kind !== 'cpu') M.timers.tick = setInterval(onlineTick, 1000);
+}
+
+function finishMatch() {
+  if (M.finished) return;
+  M.finished = true; M.live = false;
+  clearTimeout(M.timers.auto); clearTimeout(M.timers.bot); clearInterval(M.timers.tick);
+  if (M.askClose) M.askClose();
+  const o = M.over, won = o.winner === M.me;
+  const k = M.kind === 'cpu' ? 'cpu' : 'online';
+  S.rec[k][won ? 0 : 1]++; save();
+  track('play_finish_' + M.mode, { kind: M.kind, result: won ? 'win' : 'lose' });
+  renderGame();
+  if (o.kind === 'call') sfx.call();
+  // 通信の後片付け：最後の書き込み（「超えた」など）が相手に届くまで、最大8秒は、切らない
+  if (M.kind === 'cpu') netClose();
+  else {
+    const mid = N.mid, w = N.lastWrite;
+    Promise.race([w ? w.catch(() => {}) : null, new Promise(r => setTimeout(r, 8000))]).then(() => { if (N.mid === mid) netClose(); });
+  }
+  M.timers.res = setTimeout(showResult, o.kind === 'call' ? 1500 : 400);
+}
+
+function showResult() {
+  const o = M.over, won = o.winner === M.me, T = M.targetCs, total = o.total;
+  $('#rs-banner').textContent = won ? '勝ち！' : '負け…';
+  $('#rs-banner').className = 'rs-banner ' + (won ? 'win' : 'lose');
+  let why;
+  if (o.kind === 'call') {
+    const byMe = o.caller === M.me;
+    if (o.exceeded) why = byMe ? 'あなたの「超えた」は、大当たり！' : '相手の「超えた」が、当たっていました…';
+    else why = byMe ? '「超えた」は、はずれ…\nまだ超えていませんでした' : '相手の「超えた」は、はずれ！\nまだ超えていませんでした';
+  } else if (o.kind === 'timeout') why = won ? '相手が時間内に動かなかったので、不戦勝です' : '時間切れで、不戦敗です';
+  else why = won ? '相手が退室したので、不戦勝です' : '途中でやめたので、不戦敗です';
+  $('#rs-why').textContent = why;
+  // 棒グラフ：ふたりが計った時間を、順番に積む。点線がお題
+  const max = Math.max(total, T, 1) * 1.12;
+  $('#rs-bar').className = 'bar';
+  $('#rs-bar').innerHTML = M.turns.map((t, i) => `<i class="${t.p === M.me ? 'me' : 'op'}" style="--w:${(t.cs / max * 100).toFixed(2)}%;--d:${(i * 0.25).toFixed(2)}s"></i>`).join('');
+  $('#rs-mark').style.left = (T / max * 100) + '%';
+  $('#rs-t').textContent = fmtCs(T) + '秒';
+  $('#rs-total').textContent = '-';
+  const diff = total - T;
+  $('#rs-dl').textContent = diff > 0 ? '超えた分' : (diff === 0 ? 'ちょうど' : 'あと');
+  const db = $('#rs-diff'); db.textContent = diff === 0 ? '±0' : fmtCs(Math.abs(diff)) + '秒'; db.className = diff > 0 ? 'hit' : '';
+  $('#rs-turns').innerHTML = M.turns.map((t, i) => `<li><span class="lg ${t.p === M.me ? 'me' : 'op'}">${i + 1}</span>${t.p === M.me ? 'あなた' : esc(cleanName(M.names[t.p]))}<b>${fmtCs(t.cs)}秒</b></li>`).join('')
+    + (o.kind === 'call' ? `<li class="call"><span class="lg ${o.caller === M.me ? 'me' : 'op'}">!</span>${o.caller === M.me ? 'あなた' : esc(cleanName(M.names[o.caller]))}が「超えた」<b>${o.exceeded ? '当たり' : 'はずれ'}</b></li>` : '');
+  $('#rs-again').hidden = M.kind === 'room';
+  show('s-result');
+  (won ? sfx.win : sfx.lose)(); vib(won ? [40, 40, 80] : 120);
+  void $('#rs-bar').offsetWidth; setTimeout(() => $('#rs-bar').classList.add('go'), 50);
+  // 合計の数字は、棒が伸びるのに合わせて、数え上がる（アニメーション用のタイマーに頼らない：裏のタブでも、最後は必ず正しい数字になる）
+  const dur = Math.max(600, M.turns.length * 250 + 300), t0 = performance.now();
+  clearInterval(M.timers.count);
+  M.timers.count = setInterval(() => {
+    const k = Math.min(1, (performance.now() - t0) / dur);
+    $('#rs-total').textContent = fmtCs(Math.round(total * k)) + '秒';
+    if (k >= 1 || current !== 's-result') clearInterval(M.timers.count);
+  }, 40);
+}
+
+async function quitMatch() {
+  if (!M.on || M.finished) { backToMenu(); return; }
+  const ok = await ask({ title: 'やめますか？', text: M.kind === 'cpu' ? 'CPU対戦は、記録に残りません。' : '途中でやめると、負けになります。', ok: 'やめる', cancel: '続ける', danger: true });
+  if (!ok || !M.on || M.finished) return;
+  if (M.kind !== 'cpu') { M.finished = true; S.rec.online[1]++; save(); act.leave(); }   // 先に finished にして、通信の返事で、二重に数えないようにする
+  backToMenu();
+}
+function backToMenu() {
+  netClose(); resetM(); show('s-menu');
+}
+
+/* ---------- 行動をつなぐところ（CPU対戦） ---------- */
+const actCpu = {
+  start(p) { M.recs[M.recs.length] = { p, s: 1 }; onChange(); },
+  stop(p, cs) { const n = M.recs.length - 1; M.recs[n] = { p, s: 1, d: cs }; onChange(); },
+  call(p) { M.recs[M.recs.length] = { p, c: 1 }; onChange(); },
+  leave() {},
+};
+let act = actCpu;
+
+/* ---------- CPU（人間のように、時間を「感じる」ので、ときどき間違える） ---------- */
+const BOT = { noise: [] };
+const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+function botStep() {
+  if (M.kind !== 'cpu' || M.over || !M.live || M.timers.bot) return;
+  const bot = 1 - M.me;
+  if (owner() !== bot || M.run) return;
+  M.timers.bot = setTimeout(botAct, 900 + Math.random() * 1000);
+}
+function botAct() {
+  delete M.timers.bot;
+  const bot = 1 - M.me;
+  if (M.kind !== 'cpu' || M.over || !M.live || owner() !== bot || M.run) return;
+  // これまでの合計の「感じ」：番ごとに、ゆらぎ（相手の番は大きめ、自分の番は小さめ）を足す
+  let est = 0, v = 0;
+  M.turns.forEach((t, i) => {
+    if (BOT.noise[i] == null) BOT.noise[i] = gauss();
+    const k = t.p === bot ? 0.04 : 0.09;
+    est += t.cs * (1 + k * BOT.noise[i]); v += (t.cs * k) ** 2;
+  });
+  const sigma = Math.sqrt(v) + 12, z = (est - M.targetCs) / sigma;
+  const pOver = 1 / (1 + Math.exp(-1.702 * z));   // 「超えている」と思う気持ちの強さ
+  if (pOver > 0.72 || (M.turns.length >= 2 && pOver > 0.6 && Math.random() < 0.3)) { sfx.call(); actCpu.call(bot); return; }
+  const room = M.targetCs - est;
+  let len;
+  if (room > 400) len = clamp(room * (0.12 + Math.random() * 0.18), 60, 400);
+  else len = 50 + Math.random() * 40;
+  len = Math.round(len);
+  actCpu.start(bot);
+  M.timers.botRun = setTimeout(() => { if (M.kind === 'cpu' && !M.over) actCpu.stop(bot, len); }, len * 10);
+}
+
+function startCpu() {
+  sfx.unlock();
+  act = actCpu;
+  const mode = S.mode;
+  beginMatch({ kind: 'cpu', mode, targetCs: randTarget(mode), names: [safeName(), CPU_NAMES[randInt(0, CPU_NAMES.length - 1)]], me: 0, first: randInt(0, 1) });
+  // 自分が0番、CPUが1番
+}
+
+/* ---------- オンライン対戦（Firebase Realtime Database） ----------
+   ブラウザ同士は直接つながず、Firebase を中継にする（モバイル回線どうしでも、つながりやすい）。
+   Firebase の部品は、オンライン対戦を開くときに、はじめて読み込む（CPU対戦や、ふだんの遊びには影響しない）。
+   データの形（ルールは、tools で作って、コンソールに貼る）
+     queue/モード/ユーザーID           … 対戦相手を探している人（切断で自動で消える。m に、決まった対戦IDが入る）
+     matches/対戦ID/meta               … { a, b, mode, target(1/100秒), fa(aが先行か), created }
+     matches/対戦ID/p/ユーザーID        … { name, on }（on：つながっているか）
+     matches/対戦ID/t/番号             … { u, s(スタート), e(ストップ), d(長さ), c(超えた) }
+     matches/対戦ID/leave|forfeit/ユーザーID … 退室／不戦敗の印 */
+const RMFB = { ver: '10.14.1', cfg: { apiKey: '', authDomain: '', databaseURL: '', projectId: '', appId: '' } };   // Firebase のウェブアプリの設定値を入れる
+const fbOk = () => !!(RMFB.cfg.apiKey && RMFB.cfg.databaseURL);
+const FB = { ready: null, m: null, db: null, auth: null, uid: null, offset: 0 };
+const srvNow = () => Date.now() + FB.offset;
+async function fbInit() {
+  if (FB.ready) return FB.ready;
+  FB.ready = (async () => {
+    const base = `https://www.gstatic.com/firebasejs/${RMFB.ver}/`;
+    const [a, au, d] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-database.js')]);
+    FB.m = { ...a, ...au, ...d };
+    const app = a.initializeApp(RMFB.cfg);
+    FB.auth = au.getAuth(app); FB.db = d.getDatabase(app);
+    let user = await new Promise(res => { const un = au.onAuthStateChanged(FB.auth, u => { un(); res(u); }); });
+    if (!user) user = (await au.signInAnonymously(FB.auth)).user;
+    FB.uid = user.uid;
+    d.onValue(d.ref(FB.db, '.info/serverTimeOffset'), s => { FB.offset = s.val() || 0; });
+    return FB;
+  })().catch(e => { FB.ready = null; throw e; });
+  return FB.ready;
+}
+const dbRef = p => FB.m.ref(FB.db, p);
+const dbGet = async p => (await FB.m.get(dbRef(p))).val();
+const dbSet = (p, v) => FB.m.set(dbRef(p), v);
+const dbUpdate = (p, v) => FB.m.update(dbRef(p), v);
+const dbRemove = p => FB.m.remove(dbRef(p));
+const TSV = () => FB.m.serverTimestamp();
+function goOnline() { try { FB.m.goOnline(FB.db); } catch (e) {} }
+function goOffline() { try { FB.db && FB.m.goOffline(FB.db); } catch (e) {} }
+function connected(ms = 10000) {
+  return new Promise((res, rej) => {
+    let un = null; const t = setTimeout(() => { try { un && un(); } catch (e) {} rej(new Error('timeout')); }, ms);
+    un = FB.m.onValue(dbRef('.info/connected'), s => { if (s.val()) { clearTimeout(t); try { un && un(); } catch (e) {} res(); } });
+  });
+}
+async function connect() { await fbInit(); goOnline(); await connected(); }
+
+const N = { mid: null, phase: 'idle', unsub: null, unsubQ: null, unsubC: null, started: false, how: '', code: '', t0: 0 };   // N：オンラインの通信の状態
+function netClose(keepOnline) {
+  ['unsub', 'unsubQ', 'unsubC'].forEach(k => { try { N[k] && N[k](); } catch (e) {} N[k] = null; });
+  clearInterval(N.scanT); clearInterval(N.tickT); clearTimeout(N.joinT);
+  N.phase = 'idle'; N.mid = null; N.started = false;
+  if (!keepOnline && FB.db) setTimeout(() => { if (N.phase === 'idle') goOffline(); }, 3000);   // 使っていないときは切る（無料枠は、同時接続100）
+}
+// 書き込みを先に出してから、画面を直す（「超えた」は、押した瞬間に勝負が終わって、通信の後片付けが走るので、順番が大事）
+const sendW = p => { N.lastWrite = p; p.catch(netErr); return p; };
+const actOn = {
+  start() { const n = M.recs.length; sendW(dbSet(`matches/${N.mid}/t/${n}`, { u: FB.uid, s: TSV() })); M.recs[n] = { p: M.me, s: 1 }; onChange(); },
+  stop(p, cs) { const n = M.recs.length - 1; sendW(dbUpdate(`matches/${N.mid}/t/${n}`, { e: TSV(), d: cs })); M.recs[n] = { p: M.me, s: 1, d: cs }; onChange(); },
+  call() { const n = M.recs.length; sendW(dbSet(`matches/${N.mid}/t/${n}`, { u: FB.uid, c: TSV() })); M.recs[n] = { p: M.me, c: 1 }; onChange(); },
+  leave() { if (N.mid) dbSet(`matches/${N.mid}/leave/${FB.uid}`, TSV()).catch(() => {}); },
+};
+function netErr() { toast('通信がうまくいきませんでした'); }
+
+function needFb() {
+  if (fbOk()) return false;
+  toast('オンライン対戦は、準備中です。CPUと練習できます');
+  return true;
+}
+function waitUI(title, msg, opt = {}) {
+  $('#w-title').textContent = title; $('#w-msg').textContent = msg || '';
+  $('#w-code').hidden = !opt.code; if (opt.code) $('#w-code').textContent = opt.code;
+  $('#w-share').hidden = !opt.share; $('#w-cpu').hidden = !opt.cpu;
+}
+function cancelWait() {
+  const q = N.phase === 'search' ? `queue/${S.mode}/${FB.uid}` : null;
+  const room = N.phase === 'lobby' ? `matches/${N.mid}` : null;
+  try { if (q) dbRemove(q).catch(() => {}); if (room) dbRemove(room).catch(() => {}); } catch (e) {}
+  netClose(); show('s-menu');
+}
+
+/* --- ランダム対戦 --- */
+async function findRandom() {
+  if (needFb()) return;
+  sfx.unlock(); S.name = S.name || safeName();
+  waitUI('対戦相手を探しています', 'つないでいます…');
+  show('s-wait'); N.phase = 'connecting';
+  try { await connect(); }
+  catch (e) { netClose(); show('s-menu'); toast('接続できませんでした。通信環境を確認してください'); return; }
+  if (current !== 's-wait') return;   // つないでいる間に、やめた
+  const me = FB.uid, mode = S.mode, qp = `queue/${mode}/${me}`;
+  try { await dbRemove(qp).catch(() => {}); await dbSet(qp, { name: safeName(), ts: TSV() }); FB.m.onDisconnect(dbRef(qp)).remove(); }
+  catch (e) { netClose(); show('s-menu'); toast('待ち行列に入れませんでした。もう一度お試しください'); return; }
+  N.phase = 'search'; N.t0 = Date.now(); N.scanning = false;
+  N.unsubQ = FB.m.onValue(dbRef(qp + '/m'), s => { const v = s.val(); if (v && N.phase === 'search') onlineStart(v, 'random'); });
+  N.scanT = setInterval(scanQueue, 1500); N.tickT = setInterval(searchTick, 500);
+  searchTick(); scanQueue();
+}
+function searchTick() {
+  if (N.phase !== 'search') return;
+  const s = Math.floor((Date.now() - N.t0) / 1000);
+  waitUI('対戦相手を探しています', `「${MODE[S.mode].name}」で探しています… ${s}秒` + (s >= 15 ? '\nなかなか見つからないときは、CPUと練習もできます' : ''), { cpu: s >= 15 });
+}
+async function scanQueue() {
+  if (N.phase !== 'search' || N.scanning) return;
+  N.scanning = true;
+  try {
+    const mode = S.mode, snap = await FB.m.get(FB.m.query(dbRef(`queue/${mode}`), FB.m.orderByChild('ts'), FB.m.limitToFirst(30)));
+    if (N.phase !== 'search') return;
+    const v = snap.val() || {}, me = FB.uid, now = srvNow();
+    if (!v[me]) {   // 通信が途切れて、待ち行列から外れていたら、入り直す
+      await dbSet(`queue/${mode}/${me}`, { name: safeName(), ts: TSV() });
+      FB.m.onDisconnect(dbRef(`queue/${mode}/${me}`)).remove();
+    }
+    let best = null, bestTs = Infinity;
+    for (const [u, q] of Object.entries(v)) {
+      if (u === me || q.m || u > me) continue;   // ふたりが同時に探しているとき、端末番号が大きいほうだけが、組み合わせを決める
+      if ((now - q.ts) / 1000 > 150) continue;    // 古い（切れている）枠は使わない
+      if (q.ts < bestTs) { best = u; bestTs = q.ts; }
+    }
+    if (best) await claimOpp(best, mode);
+  } catch (e) { /* 次の回で、やり直す */ } finally { N.scanning = false; }
+}
+async function claimOpp(opp, mode) {
+  const me = FB.uid, mid = randHex(16);
+  try { await dbSet(`matches/${mid}/meta`, { a: me, b: opp, mode, target: randTarget(mode), fa: Math.random() < 0.5, created: TSV() }); } catch (e) { return; }
+  try { await dbSet(`queue/${mode}/${opp}/m`, mid); }
+  catch (e) { dbRemove(`matches/${mid}`).catch(() => {}); return; }   // 先に、ほかの人に取られた
+  if (N.phase === 'search') onlineStart(mid, 'random');
+}
+
+/* --- 友達と対戦（合言葉の部屋） --- */
+async function roomCreate() {
+  if (needFb()) return;
+  sfx.unlock();
+  busy('部屋を作っています…');
+  try {
+    await connect();
+    let code = '', ok = false;
+    for (let i = 0; i < 6 && !ok; i++) {
+      code = randCode();
+      if (await dbGet(`matches/${code}/meta`)) continue;
+      await dbSet(`matches/${code}/meta`, { a: FB.uid, mode: S.mode, target: randTarget(S.mode), fa: Math.random() < 0.5, created: TSV() });
+      ok = true;
+    }
+    if (!ok) throw new Error('code');
+    await dbSet(`matches/${code}/p/${FB.uid}`, { name: safeName(), on: true });
+    FB.m.onDisconnect(dbRef(`matches/${code}`)).remove();   // 友達が来る前に切れたら、部屋ごと消える
+    idle();
+    N.phase = 'lobby'; N.mid = code; N.code = code;
+    waitUI('部屋ができました', '合言葉を、友達に伝えてください。\n友達が入ると、始まります。', { code, share: true });
+    show('s-wait');
+    N.unsub = FB.m.onValue(dbRef(`matches/${code}/meta/b`), s => { if (s.val() && N.phase === 'lobby') { try { FB.m.onDisconnect(dbRef(`matches/${code}`)).cancel(); } catch (e) {} onlineStart(code, 'room'); } });
+  } catch (e) { idle(); netClose(); toast('部屋を作れませんでした。もう一度お試しください'); }
+}
+async function roomJoin() {
+  if (needFb()) return;
+  const code = $('#rm-code').value.trim().toUpperCase();
+  if (code.length !== 4) { toast('4文字の合言葉を入れてください'); return; }
+  sfx.unlock();
+  busy('部屋に入っています…');
+  try {
+    await connect();
+    const meta = await dbGet(`matches/${code}/meta`);
+    if (!meta) { idle(); toast('その部屋は、見つかりません'); return; }
+    if (meta.b || meta.a === FB.uid) { idle(); toast(meta.a === FB.uid ? '自分の部屋には、入れません' : 'その部屋は、いっぱいです'); return; }
+    await dbSet(`matches/${code}/meta/b`, FB.uid);
+    idle();
+    onlineStart(code, 'room');
+  } catch (e) { idle(); toast('入れませんでした。合言葉と通信環境を確認してください'); }
+}
+
+/* --- 試合の同期 --- */
+function onlineStart(mid, how) {
+  netClose(true);
+  if (how === 'random') {   // 組み合わせが決まったら、待ち行列から抜ける
+    const qp = `queue/${S.mode}/${FB.uid}`;
+    try { FB.m.onDisconnect(dbRef(qp)).cancel(); } catch (e) {}
+    dbRemove(qp).catch(() => {});
+  }
+  N.mid = mid; N.how = how; N.started = false; N.phase = 'join'; N.lastWrite = null;
+  act = actOn;
+  waitUI('対戦を始めます', '相手の準備を待っています…');
+  show('s-wait');
+  N.unsub = FB.m.onValue(dbRef(`matches/${mid}`), s => onlineData(s.val()));
+  const pp = `matches/${mid}/p/${FB.uid}`;
+  dbSet(pp, { name: safeName(), on: true }).then(() => { try { FB.m.onDisconnect(dbRef(pp + '/on')).set(false); } catch (e) {} }).catch(() => {});
+  // つなぎ直したときに、「つながっている」印を戻す
+  N.unsubC = FB.m.onValue(dbRef('.info/connected'), s => { if (s.val() && N.mid === mid) { dbSet(pp + '/on', true).catch(() => {}); try { FB.m.onDisconnect(dbRef(pp + '/on')).set(false); } catch (e) {} } });
+  N.joinT = setTimeout(() => { if (!N.started) { cancelWait(); toast('相手の準備が間に合いませんでした。もう一度お試しください'); } }, 15000);
+}
+function onlineData(v) {
+  if (!v || !v.meta || !v.meta.b || N.mid == null) return;
+  const meta = v.meta, uids = [meta.a, meta.b], me = uids.indexOf(FB.uid);
+  if (me < 0) return;
+  if (!N.started) {
+    if (!(v.p && v.p[meta.a] && v.p[meta.b])) return;
+    N.started = true; N.phase = 'play'; clearTimeout(N.joinT);
+    beginMatch({
+      kind: N.how === 'room' ? 'room' : 'online', mode: MODE[meta.mode] ? meta.mode : 'normal', targetCs: clamp(Math.round(+meta.target || 500), 100, 2000),
+      names: [cleanName(String(v.p[meta.a].name || '').slice(0, 10) || 'ゲスト'), cleanName(String(v.p[meta.b].name || '').slice(0, 10) || 'ゲスト')],
+      uids, me, first: meta.fa ? 0 : 1,
+    });
+  }
+  if (!M.on || M.finished) return;
+  // 番ごとの記録
+  const t = v.t || {}, arr = Array.isArray(t) ? t : Object.keys(t).sort((x, y) => x - y).map(k => t[k]);
+  M.recs = arr.map(r => r ? { p: uids.indexOf(r.u), s: r.s ? 1 : 0, d: r.d == null ? null : +r.d, c: r.c ? 1 : 0 } : null);
+  // 退室・不戦敗（自分の分も、相手の分も）
+  const gone = Object.assign({}, v.leave || {}, v.forfeit || {});
+  const goneIdx = uids.findIndex(u => gone[u]);
+  M.leaveBy = goneIdx >= 0 ? goneIdx : null;
+  M.leaveWhy = goneIdx >= 0 && v.forfeit && v.forfeit[uids[goneIdx]] ? 'timeout' : 'leave';
+  // 相手の通信の様子
+  const op = v.p && v.p[uids[1 - me]];
+  M.oppOffAt = op && op.on === false ? (M.oppOffAt || Date.now()) : 0;
+  onChange();
+}
+// 1秒ごと：相手が来ない・通信が切れたままのとき、不戦勝にする
+function onlineTick() {
+  if (M.kind === 'cpu' || !M.on || !M.live || M.over || !N.mid) return;
+  const opp = 1 - M.me, oppUid = M.uids[opp];
+  let why = '';
+  if (M.oppOffAt && Date.now() - M.oppOffAt > OFF_MS) why = 'offline';
+  else if (owner() === opp && Date.now() - M.lastEvt > IDLE_MS) why = 'idle';
+  if (why) { M.lastEvt = Date.now(); dbSet(`matches/${N.mid}/forfeit/${oppUid}`, TSV()).catch(() => {}); }
+  else renderGame();
+}
+
+/* ---------- メニュー ---------- */
+function updateMenu() {
+  $('#in-name').value = S.name;
+  $$('#mode-seg button').forEach(b => b.classList.toggle('on', b.dataset.k === S.mode));
+  const c = S.rec.cpu, o = S.rec.online, el = $('#m-rec'), parts = [];
+  if (o[0] + o[1]) parts.push(`対戦 ${o[0]}勝${o[1]}敗`);
+  if (c[0] + c[1]) parts.push(`CPU ${c[0]}勝${c[1]}敗`);
+  el.hidden = !parts.length; el.textContent = parts.join('　');
+}
+function buildMenu() {
+  $('#hero-watch').innerHTML = watchSvg('hero');
+  $('#mode-seg').innerHTML = MODES.map(m => `<button type="button" data-k="${m.key}"><b>${m.name}</b><small>${m.lo}〜${m.hi}秒</small></button>`).join('');
+  $('#mode-seg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.mode = b.dataset.k; save(); sfx.tap(); updateMenu(); });
+  const nameIn = $('#in-name');
+  nameIn.addEventListener('input', () => {
+    let v = nameIn.value.slice(0, 10);
+    if (badName(v)) { toast('その名前は、使えません'); v = S.name; nameIn.value = v; return; }
+    S.name = v; save();
+  });
+  nameIn.addEventListener('blur', () => { if (!nameIn.value.trim()) { S.name = 'ゲスト' + randInt(10, 99); nameIn.value = S.name; save(); } });
+  $('#b-random').addEventListener('click', () => { sfx.tap(); findRandom(); });
+  $('#b-room').addEventListener('click', () => { sfx.tap(); show('s-room'); });
+  $('#b-cpu').addEventListener('click', () => { sfx.tap(); startCpu(); });
+  $('#b-how').addEventListener('click', () => { sfx.tap(); $('#m-how').hidden = false; });
+  $('#m-how-ok').addEventListener('click', () => { $('#m-how').hidden = true; S.seenHow = true; save(); });
+  $('#b-set').addEventListener('click', () => { sfx.tap(); show('s-set'); });
+  $('#rm-create').addEventListener('click', roomCreate);
+  $('#rm-join').addEventListener('click', roomJoin);
+  $('#rm-code').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
+  $('#w-cancel').addEventListener('click', cancelWait);
+  $('#w-cpu').addEventListener('click', () => { cancelWait(); startCpu(); });
+  $('#w-share').addEventListener('click', shareRoom);
+  $('#se-mute').addEventListener('change', e => { S.mute = e.target.checked; save(); });
+  $('#se-vib').addEventListener('change', e => { S.novib = e.target.checked; save(); });
+  $('#se-reset').addEventListener('click', async () => { if (await ask({ title: '戦績を消しますか？', text: '勝ち負けの記録を、0に戻します。', ok: '消す', cancel: 'やめる', danger: true })) { S.rec = { cpu: [0, 0], online: [0, 0] }; save(); toast('戦績を消しました'); } });
+  // ゲーム中のボタン。スタート／ストップは、指が触れた瞬間に反応させる
+  const bm = $('#b-main');
+  bm.addEventListener('pointerdown', e => { e.preventDefault(); mainPress(); });
+  bm.addEventListener('click', e => { if (e.detail === 0) mainPress(); });   // キーボードで押したとき
+  $('#b-call').addEventListener('click', callPress);
+  $('#g-quit').addEventListener('click', quitMatch);
+  $('#rs-again').addEventListener('click', () => { sfx.tap(); if (M.kind === 'cpu') startCpu(); else if (M.kind === 'online') findRandom(); else backToMenu(); });
+  $('#rs-menu').addEventListener('click', () => { sfx.tap(); backToMenu(); });
+  $('#rs-share').addEventListener('click', shareResult);
+}
+
+/* ---------- 共有 ---------- */
+async function shareText(text, url, ev) {
+  track(ev);
+  try { if (navigator.share) { await navigator.share({ text, url }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(text + ' ' + url); toast('コピーしました'); } catch (e) { toast('共有できませんでした'); }
+}
+function shareResult() {
+  const o = M.over; if (!o) return;
+  const won = o.winner === M.me;
+  const t = o.kind === 'call'
+    ? `お題${M.targetCs / 100}秒で、合計は${fmtCs(o.total)}秒。${o.caller === M.me ? '自分の' : '相手の'}「超えた」が${o.exceeded ? '当たって' : 'はずれて'}、${won ? '勝ちました！' : '負けました…'}`
+    : (won ? '不戦勝でした。' : '不戦敗でした…');
+  shareText('【ボタンで秒数ゲーム】' + t + '\n超えたと思ったら、勝負！', SHARE_URL(), 'share_result');
+}
+function shareRoom() {
+  if (!N.code) return;
+  shareText('【ボタンで秒数ゲーム】対戦しよう！　合言葉は ' + N.code, location.origin + location.pathname + '?room=' + N.code, 'share_room');
+}
+
+/* ---------- 起動 ---------- */
+resetM();
+buildMenu();
+updateMenu();
+initAds();
+// 招待リンク（?room=合言葉）で来たとき：部屋に入る画面を開く
+try {
+  const r = (new URLSearchParams(location.search).get('room') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+  if (r) { show('s-room'); $('#rm-code').value = r; history.replaceState(null, '', location.pathname); setTimeout(() => toast('名前を確認して、「入る」を押してね'), 400); }
+} catch (e) {}
+if (!S.seenHow) setTimeout(() => { if (current === 's-menu') $('#m-how').hidden = false; }, 600);
+})();
+</script>
+</body>
+</html>
