@@ -499,9 +499,7 @@ const MAX_CS = 3000;    // 1回の計測は、30秒まで（超えたら、自�
 const MAX_TURNS = 60;   // 番の数の上限。人の反応で、1回ごとに、必ずコンマ数秒は進むので、ふつうは当たらない安全装置（ルールの長さの都合でもある）。60番が終わっても決着がつかなければ、引き分け
 const IDLE_MS = 62000;  // 相手の番で、60秒なにも起きなかったら、不戦勝（サーバーのルールは60秒。時計のずれを見て、2秒の余裕）
 const OFF_MS = 20000;   // 相手の通信が切れて、20秒たったら、不戦勝
-// CPU練習の相手の名前：ひらがな、ローマ字、ゲスト○○、数字だけ、など、ふつうの人の名前のように、ばらばらにする
-const CPU_NAMES = ['ゆうと', 'はると', 'そうた', 'りく', 'れん', 'みゆ', 'あおい', 'ひなた', 'めい', 'こはる', 'たくみ', 'ななみ', 'まお', 'しょう', 'haru', 'yuki', 'sho', 'ren', 'mio', 'kei', 'naoki', 'riku0412', 'ゲスト18', 'ゲスト27', 'ゲスト63', 'ゲスト81', '4829', '1020', '777', '30415'];
-const cpuName = () => { let n; do { n = CPU_NAMES[randInt(0, CPU_NAMES.length - 1)]; } while (n === S.name); return n; };
+const CPU_NAMES = ['タイマーくん', 'ストップ師匠', 'ぴったりさん', 'せっかちケン', 'のんびりハナ'];
 const randTarget = mode => randInt(MODE[mode].lo * 10, MODE[mode].hi * 10) * 10;   // 1/100秒の整数（0.1秒きざみ：430＝4.3秒）
 const fmtT = cs => (cs / 100).toFixed(1);   // お題の秒数の表示：「4.3」
 
@@ -1036,7 +1034,7 @@ function startCpu() {
   sfx.unlock();
   act = actCpu;
   const mode = S.mode;
-  beginMatch({ kind: 'cpu', mode, targetCs: randTarget(mode), names: [safeName(), cpuName()], me: 0, first: randInt(0, 1) });
+  beginMatch({ kind: 'cpu', mode, targetCs: randTarget(mode), names: [safeName(), CPU_NAMES[randInt(0, CPU_NAMES.length - 1)]], me: 0, first: randInt(0, 1) });
   // 自分が0番、CPUが1番
 }
 
