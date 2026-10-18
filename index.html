@@ -1178,7 +1178,8 @@ function cancelWait() {
 }
 
 /* ---------- ランクマッチ（レート戦） ---------- */
-const FILL_K = 24, FILL_CAP = 1500;   // 通信を使わない対戦で、レートを動かせる人（レート FILL_CAP 未満）が、通信を使わない対戦で、1回に動かせる幅の上限（ルールと同じ値）
+const FILL_K = 24, FILL_CAP = 4000;   // 通信を使わない対戦で、1回に動かせる幅の上限（ルールと同じ値）。FILL_CAP は、レートの最大値と同じ（実質、上限なし）
+const RANK_SINCE = 1792340667154;   // この時刻より前に、最後に遊んだ記録（試験で作ったもの）は、ランキングに出さない
 const RATE_K = { easy: 16, normal: 24, hard: 32 };   // 難易度ごとの、レートの動く幅の上限（ルールと同じ値）
 // 難易度と先行・後攻は、対戦IDから決まる（ルールが検算する。作る側が、有利な組み合わせを選べない）
 function rankedParams() {
@@ -1332,7 +1333,7 @@ async function openRanking() {
     await connect();
     const snap = await FB.m.get(FB.m.query(dbRef('ratings'), FB.m.orderByChild('rating'), FB.m.limitToLast(60)));
     const arr = [];
-    snap.forEach(c => { const v = c.val(); if (v && v.games > 0) arr.push({ id: c.key, name: c.key === FB.uid ? safeName() : cleanName(String(v.name || '').slice(0, 10) || '名無し'), rating: +v.rating, wins: +v.wins || 0, losses: +v.losses || 0, games: +v.games || 0 }); });
+    snap.forEach(c => { const v = c.val(); if (v && v.games > 0 && +v.ts >= RANK_SINCE) arr.push({ id: c.key, name: c.key === FB.uid ? safeName() : cleanName(String(v.name || '').slice(0, 10) || '名無し'), rating: +v.rating, wins: +v.wins || 0, losses: +v.losses || 0, games: +v.games || 0 }); });
     arr.sort((a, b) => b.rating - a.rating || b.wins - a.wins);
     const mine = await dbGet('ratings/' + FB.uid);
     renderRanking(arr, FB.uid, mine && mine.games != null ? { rating: mine.rating, games: mine.games, wins: mine.wins || 0, losses: mine.losses || 0, draws: mine.draws || 0 } : null);
