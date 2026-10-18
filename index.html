@@ -423,7 +423,7 @@ const MODE = Object.fromEntries(MODES.map(m => [m.key, m]));
 if (!MODE[S.mode]) S.mode = 'normal';
 const MIN_CS = 50;      // 1回の計測は、0.5秒以上（ほんの一瞬の計測で、番を飛ばし続けるのを防ぐ）
 const MAX_CS = 3000;    // 1回の計測は、30秒まで（超えたら、自動でストップ）
-const IDLE_MS = 60000;  // 相手の番で、60秒なにも起きなかったら、不戦勝
+const IDLE_MS = 62000;  // 相手の番で、60秒なにも起きなかったら、不戦勝（サーバーのルールは60秒。時計のずれを見て、2秒の余裕）
 const OFF_MS = 20000;   // 相手の通信が切れて、20秒たったら、不戦勝
 const CPU_NAMES = ['タイマーくん', 'ストップ師匠', 'ぴったりさん', 'せっかちケン', 'のんびりハナ'];
 const randTarget = mode => randInt(MODE[mode].lo, MODE[mode].hi) * 100;   // 1/100秒の整数
