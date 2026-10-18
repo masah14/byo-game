@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#ffffff">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7039412568193199" crossorigin="anonymous"></script>
-<meta name="description" content="お題の秒数を超えたと思ったら「超えた」ボタン。スタートとストップを交互に押して、合計の時間を感覚で読み合う、2人対戦のゲームです。友達とも、知らない人とも、オンラインで遊べます。">
+<meta name="description" content="お題の秒数を超えたと思ったら「超えた」ボタン。スタートとストップを交互に押して、合計の時間を感覚で読み合う、2人対戦のゲームです。友達とも、オンラインで遊べます。">
 <link rel="canonical" href="https://byo.sakamoto-games.com/">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://byo.sakamoto-games.com/?v=2">
@@ -223,6 +223,11 @@ svg.led .led-on{filter:drop-shadow(0 0 1.6px rgba(70,255,126,.85))}
 .rs-turns li.call b{color:var(--call)}
 .rs-note{margin:0;text-align:center;font-size:12px;color:var(--dim)}
 
+/* 勝ちの演出：少し間をおいて、紫の大きな筆文字が、ふわっと浮かぶ（結果の画面の上。押せる場所は、さえぎらない） */
+.win-fx{position:absolute;inset:0;z-index:15;pointer-events:none;display:flex;align-items:center;justify-content:center}
+.win-fx svg{width:100%;max-width:440px;height:auto;opacity:0;animation:win-fx 3.8s ease-out forwards}
+@keyframes win-fx{0%{opacity:0;transform:scale(1.4)}16%{opacity:1;transform:scale(1)}78%{opacity:1;transform:scale(1.035)}100%{opacity:0;transform:scale(1.07)}}
+
 /* 部品 */
 .modal{position:absolute;inset:0;z-index:20;background:rgba(17,24,39,.45);display:flex;align-items:center;justify-content:center;padding:20px}
 .modal .box{background:#fff;color:var(--ink);border:1px solid var(--soft2);border-radius:18px;padding:20px;width:100%;max-width:400px;max-height:92%;overflow-y:auto;display:flex;flex-direction:column;gap:12px;box-shadow:0 12px 30px rgba(0,0,0,.18)}
@@ -255,7 +260,7 @@ svg.led .led-on{filter:drop-shadow(0 0 1.6px rgba(70,255,126,.85))}
     </div>
     <label class="field"><span>名前</span><input id="in-name" maxlength="10" autocomplete="off" placeholder="名前"></label>
     <div class="menu-btns">
-      <button class="btn primary big" id="b-random" type="button">ランクマッチ<small>知らない人と対戦。難易度はランダムで、レートが上下します</small></button>
+      <button class="btn primary big" id="b-random" type="button">ランクマッチ<small>オンラインで対戦。難易度はランダムで、レートが動きます</small></button>
       <button class="btn ghost small" id="b-rank" type="button">ランキングを見る</button>
     </div>
     <div class="sect">
@@ -399,6 +404,7 @@ svg.led .led-on{filter:drop-shadow(0 0 1.6px rgba(70,255,126,.85))}
     </div>
   </div>
 
+  <div class="win-fx" id="win-fx" hidden aria-hidden="true"></div>
   <div class="toast" id="toast"></div>
   <div class="busy" id="busy" hidden><i></i><span id="busy-t">つないでいます…</span></div>
   <div class="turn">スマホを縦向きにして遊んでください</div>
@@ -552,6 +558,7 @@ document.addEventListener('pointerdown', () => sfx.unlock(), { once: true });
 let current = 's-menu';
 function show(id) {
   current = id;
+  if (id !== 's-result') $('#win-fx').hidden = true;
   $$('.screen').forEach(s => s.classList.toggle('on', s.id === id));
   wake(id === 's-game');
   if (id === 's-menu') updateMenu();
@@ -638,7 +645,7 @@ function resetM() {
   Object.assign(M, {
     on: false, kind: '', mode: 'normal', targetCs: 500, names: ['', ''], uids: [null, null], me: 0, first: 0,
     recs: [], recsIn: [], pl: {}, plB: 100, plEx: [], liveAt: 0, myT0: 0, turns: [], run: null, over: null, total: 0,
-    live: false, finished: false, leaveBy: null, leaveWhy: '', lastEvt: 0, oppOffAt: 0, prevRun: null, prevTurns: 0, askClose: null,
+    local: false, hp: null, live: false, finished: false, leaveBy: null, leaveWhy: '', lastEvt: 0, oppOffAt: 0, prevRun: null, prevTurns: 0, askClose: null,
   });
 }
 M.timers = {};
@@ -649,6 +656,7 @@ function clearTimers() {
   if (M.askClose) M.askClose();
 }
 const owner = () => (M.first + M.turns.length) % 2;
+const isLocal = () => M.kind === 'cpu' || !!M.local;   // 通信を使わない対戦
 
 // 番ごとの記録から、いまの状態（終わった番、計測中の番、勝負の決着）を作る。ランクマッチの結果の検算（前回の対戦の精算）にも、同じ関数を使う
 function judge(recs, first, targetCs, leaveBy, leaveWhy) {
@@ -753,7 +761,7 @@ function renderGame() {
 function beginMatch(cfg) {
   resetM();
   Object.assign(M, cfg, { on: true, lastEvt: Date.now() });
-  track('play_start_' + M.mode, { kind: M.kind });
+  track('play_start_' + M.mode, { kind: M.local && M.kind === 'ranked' ? 'ranked_fill' : M.kind });
   show('s-game');
   renderGame();
   // 先行・後攻の発表：コイントス（金の「先」＝先行、銀の「後」＝後攻）→ 文字
@@ -768,7 +776,7 @@ function beginMatch(cfg) {
     $('#g-intro').hidden = true; M.live = true; M.liveAt = performance.now(); M.lastEvt = Date.now();
     renderGame(); botStep(); onlineReplay();
   }, 3500);
-  if (M.kind !== 'cpu') M.timers.tick = setInterval(onlineTick, 1000);
+  if (!isLocal()) M.timers.tick = setInterval(onlineTick, 1000);
 }
 
 function finishMatch() {
@@ -783,7 +791,7 @@ function finishMatch() {
   renderGame();
   if (o.kind === 'call') sfx.call();
   // 通信の後片付け：最後の書き込み（「超えた」など）が相手に届くまで、最大8秒は、切らない
-  if (M.kind === 'cpu') netClose();
+  if (isLocal()) netClose();
   else {
     // ランクマッチ：結果を書いて、レートを精算する（終わるまで、通信は、切らない）
     if (M.kind === 'ranked') { N.lastWrite = rankedFinish(N.mid, o, M.uids.slice(), M.mode, M.oppRating); M.ratePromise = N.lastWrite; }
@@ -793,6 +801,22 @@ function finishMatch() {
   M.timers.res = setTimeout(showResult, o.kind === 'call' ? 1500 : 400);
 }
 
+function winFxSvg(word) {
+  const f = 'font-family:var(--serif);font-weight:900;font-size:184px;text-anchor:middle';
+  return `<svg viewBox="0 0 400 260" aria-hidden="true"><defs>`
+    + `<filter id="wfr" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".03 .05" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G"/></filter>`
+    + `<filter id="wfb" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="10"/></filter>`
+    + `<linearGradient id="wfg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9170dc"/><stop offset="1" stop-color="#4a2e93"/></linearGradient></defs>`
+    + `<text x="200" y="188" fill="#b9a2ff" opacity=".6" filter="url(#wfb)" style="${f}">${word}</text>`
+    + `<text x="206" y="194" fill="#efe7ff" opacity=".5" filter="url(#wfr)" style="${f}">${word}</text>`
+    + `<text x="200" y="188" fill="url(#wfg)" fill-opacity=".6" stroke="#4a2e93" stroke-opacity=".5" stroke-width="3" stroke-linejoin="round" filter="url(#wfr)" style="${f}">${word}</text></svg>`;
+}
+function playWinFx() {
+  if (current !== 's-result') return;
+  const el = $('#win-fx'); el.innerHTML = winFxSvg('勝利'); el.hidden = false;
+  sfx.win(); vib([40, 40, 80]);
+  clearTimeout(M.timers.fxEnd); M.timers.fxEnd = setTimeout(() => { el.hidden = true; }, 3900);
+}
 function showResult() {
   const o = M.over, won = o.winner === M.me, draw = o.kind === 'draw', T = M.targetCs, total = o.total;
   $('#rs-banner').textContent = draw ? '引き分け' : (won ? '勝ち！' : '負け…');
@@ -821,7 +845,8 @@ function showResult() {
   $('#rs-again').hidden = M.kind === 'room';
   renderRate();
   show('s-result');
-  (draw ? sfx.stop : (won ? sfx.win : sfx.lose))(); vib(draw ? 60 : (won ? [40, 40, 80] : 120));
+  if (won && !draw) M.timers.fx = setTimeout(playWinFx, 900);   // 勝ちは、少し間をおいてから、演出と音
+  else { (draw ? sfx.stop : sfx.lose)(); vib(draw ? 60 : 120); }
   void $('#rs-bar').offsetWidth; setTimeout(() => $('#rs-bar').classList.add('go'), 50);
   // 合計の数字は、棒が伸びるのに合わせて、数え上がる（アニメーション用のタイマーに頼らない：裏のタブでも、最後は必ず正しい数字になる）
   const dur = Math.max(600, M.turns.length * 250 + 300), t0 = performance.now();
@@ -837,7 +862,7 @@ async function quitMatch() {
   if (!M.on || M.finished) { backToMenu(); return; }
   const ok = await ask({ title: 'やめますか？', text: M.kind === 'cpu' ? 'CPU対戦は、記録に残りません。' : '途中でやめると、負けになります。', ok: 'やめる', cancel: '続ける', danger: true });
   if (!ok || !M.on || M.finished) return;
-  if (M.kind === 'ranked') {   // ランクマッチをやめると、負け。抜けた印→結果→レートの精算を、順番に、裏で書く
+  if (M.kind === 'ranked' && !M.local) {   // ランクマッチをやめると、負け。抜けた印→結果→レートの精算を、順番に、裏で書く
     const mid = N.mid, uids = M.uids.slice(), me = M.me, mode = M.mode, oppR = M.oppRating;
     M.finished = true;
     bg((async () => {
@@ -846,7 +871,7 @@ async function quitMatch() {
       let w = null; try { w = ((await dbGet(`matches/${mid}/res`)) || {}).w || null; } catch (e) {}
       if (w) { const r = await settleRated(mid, w, mode, oppR); if (r) toast('レート ' + r.old + ' → ' + r.rating + '（' + (r.delta > 0 ? '+' : r.delta < 0 ? '−' : '±') + Math.abs(r.delta) + '）'); }
     })());
-  } else if (M.kind !== 'cpu') { M.finished = true; S.rec.online[1]++; save(); act.leave(); }   // 先に finished にして、通信の返事で、二重に数えないようにする
+  } else if (!isLocal()) { M.finished = true; S.rec.online[1]++; save(); act.leave(); }   // 先に finished にして、通信の返事で、二重に数えないようにする
   backToMenu();
 }
 function backToMenu() {
@@ -866,15 +891,15 @@ let act = actCpu;
 const BOT = { noise: [] };
 const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
 function botStep() {
-  if (M.kind !== 'cpu' || M.over || !M.live || M.timers.bot) return;
+  if (!isLocal() || M.over || !M.live || M.timers.bot) return;
   const bot = 1 - M.me;
   if (owner() !== bot || M.run) return;
-  M.timers.bot = setTimeout(botAct, 900 + Math.random() * 1000);
+  M.timers.bot = setTimeout(M.hp ? botActHuman : botAct, M.hp ? thinkMs() : 900 + Math.random() * 1000);
 }
 function botAct() {
   delete M.timers.bot;
   const bot = 1 - M.me;
-  if (M.kind !== 'cpu' || M.over || !M.live || owner() !== bot || M.run) return;
+  if (!isLocal() || M.over || !M.live || owner() !== bot || M.run) return;
   // これまでの合計の「感じ」：番ごとに、ゆらぎ（相手の番は大きめ、自分の番は小さめ）を足す
   let est = 0, v = 0;
   M.turns.forEach((t, i) => {
@@ -891,7 +916,73 @@ function botAct() {
   else len = 50 + Math.random() * 40;
   len = Math.round(len);
   actCpu.start(bot);
-  M.timers.botRun = setTimeout(() => { if (M.kind === 'cpu' && !M.over) actCpu.stop(bot, len); }, len * 10);
+  M.timers.botRun = setTimeout(() => { if (isLocal() && !M.over) actCpu.stop(bot, len); }, len * 10);
+}
+
+/* ---------- ランクマッチの、もう一方の動かし方（くせをつける） ----------
+   時間の感じ方に、かたよりとゆらぎがある／最初の計測は、長めに押す／お題に近づくと、短く、ちょんと押す／
+   ときどき、少し早まって「超えた」を押す／考える時間が、毎回ちがって、ときどき長く止まる。 */
+function humanProfile() {
+  return { bias: 0.92 + Math.random() * 0.16, kOwn: 0.05 + Math.random() * 0.06, kOpp: 0.09 + Math.random() * 0.1, aggr: Math.random(), speed: 0.6 + Math.random() * 1.1 };
+}
+const guestName = () => { let n; do { n = 'ゲスト' + randInt(10, 99); } while (n === S.name); return n; };
+function thinkMs() {
+  const hp = M.hp; let t = (700 + Math.random() * 1400) * hp.speed;
+  if (M.turns.length === 0) t += 600 + Math.random() * 1200;   // 最初は、少し迷う
+  if (Math.random() < 0.1) t += 1800 + Math.random() * 4200;   // ときどき、長く止まる
+  return Math.round(t);
+}
+// 次の動きを決める。turns：終わった番（p, cs）、bot：相手の番号、noise：番ごとの「感じ」のゆらぎ（ずっと同じ値を使う）
+function humanDecide(hp, T, turns, bot, noise) {
+  const n = turns.length;
+  let est = 0, v = 0;
+  turns.forEach((t, i) => { if (noise[i] == null) noise[i] = gauss(); const k = t.p === bot ? hp.kOwn : hp.kOpp; est += t.cs * hp.bias * (1 + k * noise[i]); v += (t.cs * k) ** 2; });
+  const sigma = Math.sqrt(v) + 15, pOver = 1 / (1 + Math.exp(-1.702 * (est - T) / sigma)), ratio = est / T;
+  let pc = 0;
+  if (n >= 1) {
+    pc = pOver > 0.8 ? 0.93 : (pOver > 0.6 ? 0.55 : (pOver > 0.45 ? 0.2 + 0.25 * hp.aggr : 0));
+    if (ratio > 0.88 && pOver <= 0.45 && n >= 2) pc = Math.max(pc, 0.04 + 0.2 * hp.aggr);   // 早まって押す
+  }
+  if (Math.random() < pc) return { call: true, wait: 300 + Math.random() * 1500 };
+  let len;
+  if (n <= 1) len = T * (0.25 + Math.random() * 0.4);   // 最初は、長め
+  else {
+    const room = T - est;
+    if (room > 600) len = room * (0.2 + Math.random() * 0.3);
+    else if (room > 250) len = 40 + Math.random() * 110;
+    else len = 12 + Math.random() * 38;   // お題が近いと、ちょんと押す
+    len *= 0.9 + Math.random() * 0.25;
+  }
+  return { call: false, len: Math.round(clamp(len, 10, MAX_CS)) };
+}
+function botActHuman() {
+  delete M.timers.bot;
+  const bot = 1 - M.me;
+  if (!isLocal() || M.over || !M.live || owner() !== bot || M.run) return;
+  const d = humanDecide(M.hp, M.targetCs, M.turns, bot, BOT.noise);
+  if (d.call) {
+    M.timers.bot = setTimeout(() => { delete M.timers.bot; if (!isLocal() || M.over || !M.live || owner() !== bot || M.run) return; sfx.call(); actCpu.call(bot); }, d.wait);   // 押す前に、ちょっと迷う
+    return;
+  }
+  actCpu.start(bot);
+  M.timers.botRun = setTimeout(() => { if (isLocal() && !M.over && M.run && M.run.p === bot) actCpu.stop(bot, d.len); }, d.len * 10);
+}
+// 待ち時間：すぐ始まることも、少し待つことも、長く待つこともある（探しつづけながら、時間が来たら、始める）
+function pickMatchWait() {
+  const r = Math.random();
+  return r < 0.28 ? 2500 + Math.random() * 2500 : (r < 0.75 ? 5500 + Math.random() * 6500 : 12500 + Math.random() * 11500);
+}
+async function startFillMatch() {
+  if (N.phase !== 'search') return;
+  N.phase = 'fill';
+  const qp = 'rq/' + FB.uid;
+  try { const m = await dbGet(qp + '/m'); if (m) { N.phase = 'search'; onlineStart(m, 'ranked'); return; } } catch (e) {}   // ちょうど、見つけられたときは、そちらを優先
+  try { await dbRemove(qp); } catch (e) {}
+  if (current !== 's-wait') return;   // 待っている間に、やめた
+  netClose();
+  act = actCpu;
+  const { mode, fa } = rankedParams();
+  beginMatch({ kind: 'ranked', local: true, hp: humanProfile(), mode, targetCs: randTarget(mode), names: [safeName(), guestName()], uids: [FB.uid, null], me: 0, first: fa ? 0 : 1, oppRating: 0, rateResult: null, rateDone: true });
 }
 
 function startCpu() {
@@ -1072,7 +1163,7 @@ async function findRanked() {
   const qp = 'rq/' + FB.uid;
   try { await dbRemove(qp).catch(() => {}); await dbSet(qp, { name: p.name, rating: p.rating, ts: TSV() }); FB.m.onDisconnect(dbRef(qp)).remove(); }
   catch (e) { netClose(); show('s-menu'); toast('待ち行列に入れませんでした。もう一度お試しください'); return; }
-  N.phase = 'search'; N.how = 'ranked'; N.prof = p; N.t0 = Date.now(); N.scanning = false;
+  N.phase = 'search'; N.how = 'ranked'; N.prof = p; N.t0 = Date.now(); N.scanning = false; N.fillAt = pickMatchWait();
   N.unsubQ = FB.m.onValue(dbRef(qp + '/m'), s => { const v = s.val(); if (v && N.phase === 'search') onlineStart(v, 'ranked'); });
   N.scanT = setInterval(scanRanked, 1500); N.tickT = setInterval(searchTick, 500);
   searchTick(); scanRanked();
@@ -1080,7 +1171,8 @@ async function findRanked() {
 function searchTick() {
   if (N.phase !== 'search') return;
   const s = Math.floor((Date.now() - N.t0) / 1000);
-  waitUI('対戦相手を探しています', `ランクマッチで探しています… ${s}秒` + (s >= 15 ? '\nなかなか見つからないときは、CPUと練習もできます' : ''), { cpu: s >= 15 });
+  waitUI('対戦相手を探しています', `ランクマッチで探しています… ${s}秒`);
+  if (Date.now() - N.t0 >= N.fillAt) startFillMatch();
 }
 async function scanRanked() {
   if (N.phase !== 'search' || N.scanning) return;
@@ -1281,12 +1373,12 @@ function playout(recsIn) {
   return out;
 }
 function onlineReplay() {
-  if (!M.on || M.finished || M.kind === 'cpu') return;
+  if (!M.on || M.finished || isLocal()) return;
   M.recs = playout(M.recsIn); onChange();
 }
 // 1秒ごと：相手が来ない・通信が切れたままのとき、不戦勝にする
 function onlineTick() {
-  if (M.kind === 'cpu' || !M.on || !M.live || M.over || !N.mid) return;
+  if (isLocal() || !M.on || !M.live || M.over || !N.mid) return;
   const opp = 1 - M.me, oppUid = M.uids[opp];
   let why = '';
   if (M.oppOffAt && Date.now() - M.oppOffAt > OFF_MS) why = 'offline';
