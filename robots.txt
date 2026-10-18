@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://byo.sakamoto-games.com/sitemap.xml
+Sitemap: https://bodyclockbattle.sakamoto-games.com/sitemap.xml
