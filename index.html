@@ -806,7 +806,7 @@ function startCpu() {
      matches/対戦ID/p/ユーザーID        … { name, on }（on：つながっているか）
      matches/対戦ID/t/番号             … { u, s(スタート), e(ストップ), d(長さ), c(超えた) }
      matches/対戦ID/leave|forfeit/ユーザーID … 退室／不戦敗の印 */
-const RMFB = { ver: '10.14.1', cfg: { apiKey: '', authDomain: '', databaseURL: '', projectId: '', appId: '' } };   // Firebase のウェブアプリの設定値を入れる
+const RMFB = { ver: '10.14.1', cfg: { apiKey: 'AIzaSyAufwz6FA0oyLhlmjvmhR91hhjnFzA9mSU', authDomain: 'byo-sakamoto-games.firebaseapp.com', databaseURL: 'https://byo-sakamoto-games-default-rtdb.asia-southeast1.firebasedatabase.app', projectId: 'byo-sakamoto-games', appId: '1:976167630634:web:efd31e0ee74d0e1e56d053' } };   // Firebase のウェブアプリの設定値（公開されても問題のない値。守っているのは、データベースのルール）
 const fbOk = () => !!(RMFB.cfg.apiKey && RMFB.cfg.databaseURL);
 const FB = { ready: null, m: null, db: null, auth: null, uid: null, offset: 0 };
 const srvNow = () => Date.now() + FB.offset;
