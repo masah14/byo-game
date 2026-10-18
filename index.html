@@ -838,6 +838,21 @@ function winFxSvg(word) {
     + `<text x="206" y="186" fill="#fff" stroke="#fff" stroke-width="6" stroke-linejoin="round" style="${f}">${word}</text>`
     + `<text x="206" y="186" fill="url(#wfg)" style="${f}">${word}</text></g></svg>`;
 }
+// 棒が伸びて、お題の線を超える直前に、演出を出す（線を超えない勝ちは、棒が伸び終わってから）
+function watchBarForFx(total, T, dur) {
+  const t0 = performance.now(), crosses = total > T;
+  clearInterval(M.timers.fxw);
+  M.timers.fxw = setInterval(() => {
+    if (current !== 's-result') { clearInterval(M.timers.fxw); return; }
+    const el = performance.now() - t0;
+    let hit = false;
+    if (crosses) {
+      let right = 0; $$('#rs-bar i').forEach(i => { const r = i.getBoundingClientRect(); if (r.width > 0.5) right = Math.max(right, r.right); });
+      hit = right >= $('#rs-mark').getBoundingClientRect().left - 16;
+    } else hit = el >= dur + 150;
+    if (hit || el > 4000) { clearInterval(M.timers.fxw); playWinFx(); }
+  }, 25);
+}
 function playWinFx() {
   if (current !== 's-result') return;
   const el = $('#win-fx'); el.innerHTML = winFxSvg('勝利'); el.hidden = false;
@@ -873,7 +888,8 @@ function showResult() {
   $('#rs-again').hidden = M.kind === 'room';
   renderRate();
   show('s-result');
-  if (won && !draw) M.timers.fx = setTimeout(playWinFx, 900);   // 勝ちは、少し間をおいてから、演出と音
+  const barDur = Math.max(600, M.turns.length * 250 + 300);
+  if (won && !draw) watchBarForFx(total, T, barDur);   // 勝ちは、棒がお題の線を超える直前に、演出と音
   else { (draw ? sfx.stop : sfx.lose)(); vib(draw ? 60 : 120); }
   void $('#rs-bar').offsetWidth; setTimeout(() => $('#rs-bar').classList.add('go'), 50);
   // 合計の数字は、棒が伸びるのに合わせて、数え上がる（アニメーション用のタイマーに頼らない：裏のタブでも、最後は必ず正しい数字になる）
