@@ -466,6 +466,27 @@ if (GA_ON) {
   gtag('js', new Date()); gtag('config', GA_ID, { allow_google_signals: false, allow_ad_personalization_signals: false });
   const sc = document.createElement('script'); sc.async = true; sc.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(GA_ID); document.head.appendChild(sc);
 }
+/* ---------- 星詠みデイリーから来たとき ---------- */
+// 星詠みデイリー（hoshiyomi-daily.com）のリンクには、?hy=印 が付いてくる。印を覚えておいて（URLからは消す）、1回遊び終わったとき（結果が出たとき）に、1回だけ、「遊んだ」と知らせる。
+// 印がないときは、何もしない。知らせるのに失敗しても、ゲームは止めない。送るのは、印と、ゲームの名前だけ（個人を特定する情報は、送らない）
+try {
+  const u = new URL(location.href), hy = u.searchParams.get('hy');
+  if (hy !== null) {
+    if (/^[\x21-\x7e]{1,500}$/.test(hy)) sessionStorage.setItem('byo-hy', hy);
+    u.searchParams.delete('hy'); history.replaceState(null, '', u.pathname + u.search + u.hash);
+  }
+} catch (e) {}
+function notifyPlayed() {
+  let t = null;
+  try { t = sessionStorage.getItem('byo-hy'); sessionStorage.removeItem('byo-hy'); } catch (e) {}   // 印は、送る前に消す（1回だけ）
+  if (!t) return;
+  try {
+    fetch('https://hoshiyomi-daily.com/api/ad/played', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ token: t, game: 'bodyclockbattle' }), keepalive: true,
+    }).catch(() => {});
+  } catch (e) {}
+}
 // イベント名：play_start_<モード>、play_finish_<モード>、share_result
 const track = (name, p) => { if (GA_ON) { try { gtag('event', name, p || {}); } catch (e) {} } };
 
@@ -915,6 +936,7 @@ function showResult() {
   $('#rs-again').hidden = M.kind === 'room';
   renderRate();
   show('s-result');
+  notifyPlayed();   // 星詠みデイリーから来ていたら、1回だけ、知らせる
   const barDur = Math.max(600, M.turns.length * 250 + 300);
   if (draw) { sfx.stop(); vib(60); }
   else watchBarForFx(total, T, barDur, won ? 'win' : 'lose');   // 勝ち・負けとも、棒がお題の線を超える直前（超えないときは、ゲージが止まった瞬間）に、演出と音
